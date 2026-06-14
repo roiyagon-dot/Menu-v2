@@ -78,7 +78,7 @@ header h1 span{color:var(--accent2);font-style:italic}
 .shopping-item input[type=checkbox]{accent-color:var(--accent);width:14px;height:14px;flex-shrink:0}
 .shopping-item.checked span{text-decoration:line-through;color:var(--text-muted)}
 .no-ingredients{color:var(--text-muted);font-size:.9rem;font-style:italic;padding:40px;text-align:center}
-.ios-export-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--text);transition:all .2s;display:flex;align-items:center;gap:6px}
+.ios-export-btn{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:7px 14px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size autobiography:.82rem;color:var(--text);transition:all .2s;display:flex;align-items:center;gap:6px}
 .ios-export-btn:hover{border-color:#555;background:#f0f0f0}
 
 /* ── Recipes ── */
@@ -249,4 +249,688 @@ header h1 span{color:var(--accent2);font-style:italic}
     
     <div class="form-group">
       <label>Ingredientes (Uno por línea con su sección opcional, ej: [Verdulería] 2 Tomates) *</label>
-      <textarea id="rec-ingredients" placeholder="
+      <textarea id="rec-ingredients" placeholder="[Legumbres] 1 bote de garbanzos&#10;[Verdulería] 1 cebolla&#10;1 cdta de comino"></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label>Pasos de preparación (Uno por línea)</label>
+      <textarea id="rec-steps" placeholder="Triturar los garbanzos con la cebolla.&#10;Dar forma y dorar en la sartén."></textarea>
+    </div>
+    
+    <div class="form-group">
+      <label>Notas adicionales o Macros</label>
+      <input type="text" id="rec-notes" placeholder="Quedan mejor si dejas reposar la masa.">
+    </div>
+    
+    <div class="form-group">
+      <label>Etiquetas por defecto</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="rchk-protein"> Proteína</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="rchk-vegraw"> Verdura Cruda</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="rchk-vegcooked"> Verdura Cocinada</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="rchk-carbs"> Hidratos</label>
+      </div>
+    </div>
+    
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeRecipeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveRecipe()">Guardar Receta</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay recipe-view-modal" id="recipe-view-modal">
+  <div class="modal">
+    <div class="recipe-view-title" id="v-title">Título</div>
+    <div class="recipe-view-subtitle" id="v-subtitle">Macros / Tags</div>
+    <div class="macro-pills" id="v-pills"></div>
+    
+    <div class="recipe-view-body">
+      <div class="recipe-section">
+        <h5>Ingredientes</h5>
+        <ul class="ingredient-list" id="v-ingredients"></ul>
+      </div>
+      <div class="recipe-section">
+        <h5>Preparación</h5>
+        <ol class="steps-list" id="v-steps"></ol>
+      </div>
+    </div>
+    <div class="recipe-notes" id="v-notes"></div>
+    
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="closeViewModal()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA STATE & STORES
+// ══════════════════════════════════════════
+let state = {
+  currentWeekStart: "", 
+  planner: {},          
+  recipes: [],          
+  shoppingChecks: {}    
+};
+
+const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const SLOTS = [
+  { id: "comida_plato", label: "Comida" },
+  { id: "comida_verdura", label: "Verdura" },
+  { id: "comida_prote", label: "Proteína" },
+  { id: "comida_carbo", label: "Hidratos" },
+  { id: "spacer_1", isSpacer: true },
+  { id: "cena_plato", label: "Cena" },
+  { id: "cena_verdura", label: "Verdura" },
+  { id: "cena_prote", label: "Proteína" },
+  { id: "cena_carbo", label: "Hidratos" }
+];
+
+// ══════════════════════════════════════════
+// LOCALSTORAGE CORE
+// ══════════════════════════════════════════
+function loadLocalData() {
+  try {
+    const p = localStorage.getItem("vegan_planner_data");
+    if(p) state.planner = JSON.parse(p);
+    
+    const r = localStorage.getItem("vegan_recipes_data");
+    if(r) state.recipes = JSON.parse(r);
+    else state.recipes = getMockRecipes(); 
+    
+    const c = localStorage.getItem("vegan_shopping_checks");
+    if(c) state.shoppingChecks = JSON.parse(c);
+  } catch(e) {
+    console.error("Error cargando LocalStorage", e);
+  }
+}
+
+function saveLocalData() {
+  localStorage.setItem("vegan_planner_data", JSON.stringify(state.planner));
+  localStorage.setItem("vegan_recipes_data", JSON.stringify(state.recipes));
+  localStorage.setItem("vegan_shopping_checks", JSON.stringify(state.shoppingChecks));
+}
+
+// ══════════════════════════════════════════
+// CALENDAR MECHANICS
+// ══════════════════════════════════════════
+function initCalendar() {
+  if (!state.currentWeekStart) {
+    const d = new Date();
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); 
+    const monday = new Date(d.setDate(diff));
+    state.currentWeekStart = formatDate(monday);
+  }
+  updateWeekUI();
+}
+
+function updateWeekUI() {
+  const start = parseDate(state.currentWeekStart);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  
+  document.getElementById('week-label').textContent = `${start.getDate()} ${getMonthName(start)} — ${end.getDate()} ${getMonthName(end)} ${end.getFullYear()}`;
+  document.getElementById('week-start').value = state.currentWeekStart;
+  
+  renderGrid();
+}
+
+function prevWeek() { moveWeek(-7); }
+function nextWeek() { moveWeek(7); }
+function moveWeek(days) {
+  const d = parseDate(state.currentWeekStart);
+  d.setDate(d.getDate() + days);
+  state.currentWeekStart = formatDate(d);
+  updateWeekUI();
+}
+function jumpToWeek() {
+  const val = document.getElementById('week-start').value;
+  if(val) {
+    const d = parseDate(val);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    state.currentWeekStart = formatDate(new Date(d.setDate(diff)));
+    updateWeekUI();
+  }
+}
+
+// ══════════════════════════════════════════
+// RENDER PLANNER GRID
+// ══════════════════════════════════════════
+function renderGrid() {
+  const grid = document.getElementById('week-grid');
+  grid.innerHTML = "";
+  
+  const corner = el('div', 'grid-header');
+  corner.textContent = "Categoría";
+  grid.appendChild(corner);
+  
+  const start = parseDate(state.currentWeekStart);
+  for(let i=0; i<7; i++) {
+    const curr = new Date(start);
+    curr.setDate(start.getDate() + i);
+    const h = el('div', 'grid-header');
+    h.innerHTML = `${DAYS[i]}<br><span style="font-weight:300;opacity:0.8;font-size:0.65rem">${curr.getDate()}/${curr.getMonth()+1}</span>`;
+    grid.appendChild(h);
+  }
+  
+  const weekKey = state.currentWeekStart;
+  const weekData = state.planner[weekKey] || {};
+  
+  SLOTS.forEach((slot, slotIdx) => {
+    if(slot.isSpacer) {
+      grid.appendChild(el('div', 'section-spacer'));
+      return;
+    }
+    
+    const label = el('div', 'section-label');
+    label.textContent = slot.label;
+    grid.appendChild(label);
+    
+    for(let dayIdx=0; dayIdx<7; dayIdx++) {
+      const cellKey = `${dayIdx}_${slotIdx}`;
+      const meal = weekData[cellKey];
+      const cell = el('div', 'meal-cell');
+      
+      if(meal && meal.name) {
+        cell.onclick = () => openMealModal(dayIdx, slotIdx, meal);
+        
+        const nameEl = el('div', 'meal-name');
+        nameEl.textContent = meal.name;
+        cell.appendChild(nameEl);
+        
+        const tagsEl = el('div', 'meal-tags');
+        if(meal.tags && meal.tags.length) {
+          meal.tags.forEach(t => {
+            const tEl = el('span', `tag ${t}`);
+            tEl.textContent = translateTag(t);
+            tagsEl.appendChild(tEl);
+          });
+        }
+        cell.appendChild(tagsEl);
+        
+        const del = el('button', 'delete-meal');
+        del.innerHTML = "✕";
+        del.onclick = (e) => { e.stopPropagation(); deleteMeal(dayIdx, slotIdx); };
+        cell.appendChild(del);
+        
+        const recipe = state.recipes.find(r => r.title.toLowerCase().trim() === meal.name.toLowerCase().trim());
+        if(recipe) {
+          const vBtn = el('button', 'view-recipe-btn');
+          vBtn.textContent = "Receta";
+          vBtn.onclick = (e) => { e.stopPropagation(); openViewModal(recipe.id); };
+          cell.appendChild(vBtn);
+        }
+      } else {
+        cell.onclick = () => openMealModal(dayIdx, slotIdx, null);
+        const addBtn = el('button', 'add-meal-btn');
+        addBtn.textContent = "+";
+        cell.appendChild(addBtn);
+      }
+      grid.appendChild(cell);
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+// MEAL EDITOR MECHANICS
+// ══════════════════════════════════════════
+function openMealModal(day, slot, meal) {
+  document.getElementById('meal-day').value = day;
+  document.getElementById('meal-slot').value = slot;
+  document.getElementById('meal-modal-title').textContent = `${SLOTS[slot].label} del ${DAYS[day]}`;
+  
+  const nameInp = document.getElementById('meal-name-input');
+  nameInp.value = meal ? meal.name : "";
+  
+  ['protein','vegraw','vegcooked','carbs'].forEach(t => {
+    document.getElementById(`chk-${t}`).checked = meal ? (meal.tags || []).includes(t) : false;
+  });
+  
+  document.getElementById('meal-auto-list').style.display = "none";
+  document.getElementById('meal-modal').classList.add('open');
+  nameInp.focus();
+}
+
+function closeMealModal() { document.getElementById('meal-modal').classList.remove('open'); }
+
+function handleMealSearch(val) {
+  const list = document.getElementById('meal-auto-list');
+  list.innerHTML = "";
+  if(!val.trim()) { list.style.display = "none"; return; }
+  
+  const matches = state.recipes.filter(r => r.title.toLowerCase().includes(val.toLowerCase())).slice(0, 5);
+  if(!matches.length) { list.style.display = "none"; return; }
+  
+  matches.forEach(r => {
+    const item = el('div', 'autocomplete-item');
+    item.innerHTML = `<strong>${r.title}</strong><small>${(r.tags||[]).map(translateTag).join(', ')}</small>`;
+    item.onclick = () => {
+      document.getElementById('meal-name-input').value = r.title;
+      ['protein','vegraw','vegcooked','carbs'].forEach(t => {
+        document.getElementById(`chk-${t}`).checked = (r.tags || []).includes(t);
+      });
+      list.style.display = "none";
+    };
+    list.appendChild(item);
+  });
+  list.style.display = "block";
+}
+
+function saveMeal() {
+  const day = document.getElementById('meal-day').value;
+  const slot = document.getElementById('meal-slot').value;
+  const name = document.getElementById('meal-name-input').value.trim();
+  
+  if(!name) { closeMealModal(); return; }
+  
+  const tags = [];
+  ['protein','vegraw','vegcooked','carbs'].forEach(t => {
+    if(document.getElementById(`chk-${t}`).checked) tags.push(t);
+  });
+  
+  const weekKey = state.currentWeekStart;
+  if(!state.planner[weekKey]) state.planner[weekKey] = {};
+  
+  state.planner[weekKey][`${day}_${slot}`] = { name, tags };
+  
+  saveLocalData();
+  renderGrid();
+  closeMealModal();
+  notify("Plato guardado");
+}
+
+function deleteMeal(day, slot) {
+  const weekKey = state.currentWeekStart;
+  if(state.planner[weekKey]) {
+    delete state.planner[weekKey][`${day}_${slot}`];
+    saveLocalData();
+    renderGrid();
+    notify("Plato eliminado");
+  }
+}
+
+// ══════════════════════════════════════════
+// SHOPPING GENERATOR ENGINE
+// ══════════════════════════════════════════
+function generateShopping() {
+  const weekKey = state.currentWeekStart;
+  const weekData = state.planner[weekKey] || {};
+  
+  const plannedNames = Object.values(weekData).map(m => m.name.toLowerCase().trim());
+  if(!plannedNames.length) {
+    document.getElementById('shopping-grid').innerHTML = `<div class="no-ingredients">No hay platos añadidos en esta semana. Añade platos al planificador primero para estructurar tu compra.</div>`;
+    document.getElementById('shopping-subtitle').textContent = "Ningún plato planificado";
+    showTab('shopping');
+    return;
+  }
+  
+  const sections = {}; 
+  
+  plannedNames.forEach(name => {
+    const r = state.recipes.find(rec => rec.title.toLowerCase().trim() === name);
+    if(r && r.ingredients) {
+      r.ingredients.forEach(ing => {
+        let cat = "Otros de Despensa";
+        let cleanIng = ing.trim();
+        
+        if(ing.startsWith("[")) {
+          const idx = ing.indexOf("]");
+          if(idx > 1) {
+            cat = ing.substring(1, idx).trim();
+            cleanIng = ing.substring(idx + 1).trim();
+          }
+        }
+        if(!sections[cat]) sections[cat] = [];
+        if(!sections[cat].includes(cleanIng)) sections[cat].push(cleanIng);
+      });
+    }
+  });
+
+  const grid = document.getElementById('shopping-grid');
+  grid.innerHTML = "";
+  
+  const categories = Object.keys(sections).sort();
+  if(!categories.length) {
+    grid.innerHTML = `<div class="no-ingredients">Los platos planificados no tienen recetas detalladas creadas en la pestaña "Recetas".</div>`;
+    document.getElementById('shopping-subtitle').textContent = "Lista vacía";
+    showTab('shopping');
+    return;
+  }
+  
+  categories.forEach(cat => {
+    const box = el('div', 'shopping-section');
+    const title = el('h4');
+    title.textContent = cat;
+    box.appendChild(title);
+    
+    sections[cat].forEach(ing => {
+      const item = el('label', 'shopping-item');
+      const isChecked = !!state.shoppingChecks[ing];
+      if(isChecked) item.classList.add('checked');
+      
+      const chk = el('input');
+      chk.type = "checkbox";
+      chk.checked = isChecked;
+      chk.onchange = () => {
+        state.shoppingChecks[ing] = chk.checked;
+        if(chk.checked) item.classList.add('checked');
+        else item.classList.remove('checked');
+        saveLocalData();
+      };
+      
+      const span = el('span');
+      span.textContent = ing;
+      
+      item.appendChild(chk);
+      item.appendChild(span);
+      box.appendChild(item);
+    });
+    grid.appendChild(box);
+  });
+  
+  document.getElementById('shopping-subtitle').textContent = `Compra de la semana del ${weekKey}`;
+  showTab('shopping');
+}
+
+function clearShoppingChecks() {
+  state.shoppingChecks = {};
+  saveLocalData();
+  const weekKey = state.currentWeekStart;
+  if(state.planner[weekKey] && Object.keys(state.planner[weekKey]).length) {
+    generateShopping();
+  }
+  notify("Checks limpiados");
+}
+
+function exportToReminders() {
+  const items = [];
+  document.querySelectorAll('.shopping-item:not(.checked) span').forEach(s => items.push(s.textContent));
+  if(!items.length) { alert("No hay artículos sin marcar para exportar."); return; }
+  
+  const text = items.join('\n');
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      alert("¡Lista copiada!\n\nAbre la app 'Recordatorios' de tu iPhone, crea una lista vacía y dale a 'Pegar'.");
+    });
+  } else {
+    alert("Copia el texto manualmente:\n\n" + text);
+  }
+}
+
+// ══════════════════════════════════════════
+// RECIPES MANAGEMENT CORE
+// ══════════════════════════════════════════
+function renderRecipes() {
+  const grid = document.getElementById('recipes-grid');
+  grid.innerHTML = "";
+  const query = document.getElementById('recipe-search').value.toLowerCase().trim();
+  
+  const filtered = state.recipes.filter(r => {
+    return r.title.toLowerCase().includes(query) || 
+           (r.ingredients || []).some(i => i.toLowerCase().includes(query));
+  });
+  
+  filtered.sort((a,b) => a.title.localeCompare(b.title)).forEach(r => {
+    const card = el('div', 'recipe-card');
+    
+    const title = el('h4');
+    title.textContent = r.title;
+    card.appendChild(title);
+    
+    const tags = el('div', 'tags');
+    if(r.tags && r.tags.length) {
+      r.tags.forEach(t => {
+        const span = el('span', `tag ${t}`);
+        span.textContent = translateTag(t);
+        tags.appendChild(span);
+      });
+    }
+    card.appendChild(tags);
+    
+    const prev = el('div', 'ingredients-preview');
+    prev.textContent = r.ingredients && r.ingredients.length ? 
+      r.ingredients.map(i => i.replace(/^\[.*?\]/, '').trim()).slice(0, 3).join(', ') + (r.ingredients.length > 3 ? '...' : '') : 
+      'Sin ingredientes';
+    card.appendChild(prev);
+    
+    const actions = el('div', 'recipe-card-actions');
+    
+    const vBtn = el('button', 'btn-xs view');
+    vBtn.textContent = "Ver Receta";
+    vBtn.onclick = () => openViewModal(r.id);
+    actions.appendChild(vBtn);
+    
+    const eBtn = el('button', 'btn-xs');
+    eBtn.textContent = "Editar";
+    eBtn.onclick = () => openRecipeModal(r);
+    actions.appendChild(eBtn);
+    
+    const dBtn = el('button', 'btn-xs danger');
+    dBtn.textContent = "Borrar";
+    dBtn.onclick = () => deleteRecipe(r.id);
+    actions.appendChild(dBtn);
+    
+    card.appendChild(actions);
+    grid.appendChild(card);
+  });
+}
+
+function openRecipeModal(recipe = null) {
+  document.getElementById('recipe-id-input').value = recipe ? recipe.id : "";
+  document.getElementById('recipe-modal-title').textContent = recipe ? "Editar Receta" : "Añadir Receta";
+  
+  document.getElementById('rec-title').value = recipe ? recipe.title : "";
+  document.getElementById('rec-ingredients').value = recipe ? (recipe.ingredients || []).join('\n') : "";
+  document.getElementById('rec-steps').value = recipe ? (recipe.steps || []).join('\n') : "";
+  document.getElementById('rec-notes').value = recipe ? recipe.notes || "" : "";
+  
+  ['protein','vegraw','vegcooked','carbs'].forEach(t => {
+    document.getElementById(`rchk-${t}`).checked = recipe ? (recipe.tags || []).includes(t) : false;
+  });
+  
+  document.getElementById('recipe-modal').classList.add('open');
+}
+
+function closeRecipeModal() { document.getElementById('recipe-modal').classList.remove('open'); }
+
+function saveRecipe() {
+  const id = document.getElementById('recipe-id-input').value;
+  const title = document.getElementById('rec-title').value.trim();
+  const ingText = document.getElementById('rec-ingredients').value.trim();
+  const stepsText = document.getElementById('rec-steps').value.trim();
+  const notes = document.getElementById('rec-notes').value.trim();
+  
+  if(!title || !ingText) { alert("Título e Ingredientes obligatorios"); return; }
+  
+  const ingredients = ingText.split('\n').map(l => l.trim()).filter(l => l);
+  const steps = stepsText.split('\n').map(l => l.trim()).filter(l => l);
+  
+  const tags = [];
+  ['protein','vegraw','vegcooked','carbs'].forEach(t => {
+    if(document.getElementById(`rchk-${t}`).checked) tags.push(t);
+  });
+  
+  if(id) {
+    const idx = state.recipes.findIndex(r => r.id === id);
+    if(idx >= 0) state.recipes[idx] = { id, title, ingredients, steps, notes, tags };
+  } else {
+    const newId = "rec_" + Date.now();
+    state.recipes.push({ id: newId, title, ingredients, steps, notes, tags });
+  }
+  
+  saveLocalData();
+  renderRecipes();
+  renderGrid(); 
+  closeRecipeModal();
+  notify("Receta guardada");
+}
+
+function deleteRecipe(id) {
+  if(confirm("¿Seguro que quieres borrar esta receta?")) {
+    state.recipes = state.recipes.filter(r => r.id !== id);
+    saveLocalData();
+    renderRecipes();
+    renderGrid();
+    notify("Receta borrada");
+  }
+}
+
+// ══════════════════════════════════════════
+// RECIPES VIEWER MECHANICS
+// ══════════════════════════════════════════
+function openViewModal(id) {
+  const r = state.recipes.find(rec => rec.id === id);
+  if(!r) return;
+  
+  document.getElementById('v-title').textContent = r.title;
+  document.getElementById('v-subtitle').textContent = r.notes || "Receta casera";
+  
+  const pills = document.getElementById('v-pills');
+  pills.innerHTML = "";
+  if(r.tags) {
+    r.tags.forEach(t => {
+      const p = el('span', `tag ${t}`);
+      p.textContent = translateTag(t);
+      pills.appendChild(p);
+    });
+  }
+  
+  const ingList = document.getElementById('v-ingredients');
+  ingList.innerHTML = "";
+  r.ingredients.forEach(i => {
+    const li = el('li');
+    li.textContent = i.replace(/^\[.*?\]/, '').trim();
+    ingList.appendChild(li);
+  });
+  
+  const stepsList = document.getElementById('v-steps');
+  stepsList.innerHTML = "";
+  if(r.steps && r.steps.length) {
+    r.steps.forEach(s => {
+      const li = el('li');
+      li.textContent = s;
+      stepsList.appendChild(li);
+    });
+  } else {
+    stepsList.innerHTML = "<p style='font-size:0.82rem;color:var(--text-muted);font-style:italic;'>Sin pasos explicados.</p>";
+  }
+  
+  document.getElementById('v-notes').textContent = r.notes ? `Nota aclaratoria: ${r.notes}` : "";
+  document.getElementById('recipe-view-modal').classList.add('open');
+}
+
+function closeViewModal() { document.getElementById('recipe-view-modal').classList.remove('open'); }
+
+// ══════════════════════════════════════════
+// UI UTILS
+// ══════════════════════════════════════════
+function showTab(name){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const idx=['planner','shopping','recipes'].indexOf(name);
+  if(idx>=0)document.querySelectorAll('.tab-btn')[idx].classList.add('active');
+  if(name==='recipes')renderRecipes();
+}
+function el(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2800);}
+
+// Cierre de ventanas modales clicando fuera
+['meal-modal','recipe-modal','recipe-view-modal'].forEach(id=>{
+  const elem = document.getElementById(id);
+  if (elem) {
+    elem.addEventListener('click', e => {
+      if(e.target.id === id){
+        if(id === 'meal-modal') closeMealModal();
+        else if(id === 'recipe-modal') closeRecipeModal();
+        else if(id === 'recipe-view-modal') closeViewModal();
+      }
+    });
+  }
+});
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function parseDate(str) {
+  const parts = str.split('-');
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+function getMonthName(d) {
+  return d.toLocaleString('es', { month: 'short' }).replace('.', '');
+}
+function translateTag(t) {
+  const m = { protein: "Proteína", vegraw: "Verdura Cruda", vegcooked: "Verdura Cocinada", carbs: "Hidratos" };
+  return m[t] || t;
+}
+
+// ══════════════════════════════════════════
+// TU LIBRO DE RECETAS REAL (PDF INTEGRADO)
+// ══════════════════════════════════════════
+function getMockRecipes() {
+  return [
+    {
+      id: "pdf_1",
+      title: "Beef & Brocauli",
+      ingredients: ["[Proteína] Filete de soia","[Verdulería] Brócoli","[Verdulería] Xenxibre","[Verdulería] Allo","[Verdulería] Ceboliña chinesa","[Despensa] 2 cdas S. soia oscura","[Despensa] 2 cdas S. soia normal","[Despensa] 1 cda azúcre moreno","[Despensa] 1 vaso caldo"],
+      steps: ["Hidratamos a soia en auga fervendo por 30 mins para que quede ben brandiña.","Facemos un sofrito co allo, a ceboliña e o xenxibre. Cocemos o brócoli no micro.","Mesturamos as salsas soia, o caldo e o azúcre. Engadimos á soia escoada e xuntamos todo na tixola."],
+      notes: "Cun pemento verde queda espectacular. Podes usar aceite de xirasol.",
+      tags: ["protein", "vegcooked", "carbs"]
+    },
+    {
+      id: "pdf_2",
+      title: "Börek",
+      ingredients: ["[Despensa] Masa filo","[Verdulería] 1 cebolla","[Verdulería] 2 dientes de ajo","[Verdulería] Espinacas frescas","[Proteína] Tofu desmigajable","[Despensa] 1 bote tomates secos","[Despensa] 1 puñadito de avellanas","[Proteína] Feta vegano (opcional)"],
+      steps: ["Picar ajo, cebolla y tomates secos. Sofreír junto con las espinacas hasta que reduzcan.","Desmigajar el tofu y añadirlo a la sartén junto con las avellanas picadas y el feta.","Colocar el relleno sobre las hojas de masa filo, enrollar en forma de espiral y hornear a 200°C."],
+      notes: "Crujiente y delicioso.",
+      tags: ["protein", "vegcooked", "carbs"]
+    },
+    {
+      id: "pdf_3",
+      title: "Boloñesa Tofu",
+      ingredients: ["[Proteína] Tofu ahumado","[Despensa] Salsa de tomate","[Verdulería] Zanahoria","[Verdulería] Cebolla","[Despensa] Pasta al gusto"],
+      steps: ["Rallar el tofu ahumado y sofreír en una sartén hasta que dore.","Picar y añadir la cebolla y la zanahoria rallada fina.","Verter la salsa de tomate y dejar reducir. Servir sobre la pasta cocida."],
+      notes: "Perfecto para batch cooking.",
+      tags: ["protein", "vegcooked", "carbs"]
+    },
+    {
+      id: "pdf_4",
+      title: "Callos Veganos",
+      ingredients: ["[Legumbres] Garbanzos cocidos","[Proteína] Yuba (piel de tofu)","[Verdulería] Setas Shiitake deshidratadas","[Verdulería] Boletus deshidratados","[Verdulería] Oreja de judas deshidratada","[Verdulería] Zanahoria","[Verdulería] Ajo y Cebolla","[Despensa] Pimentón dulce y picante, comino","[Despensa] Pan reseso"],
+      steps: ["Remojar las setas y la yuba la noche anterior.","Sofreír ajo, cebolla y zanahoria rallada con abundante pimentón y comino. Triturar este fondo.","Calentar los garbanzos usando el agua colada de las setas. Añadir las setas picadas, la yuba y el fondo triturado. Espesar desmigajando el pan."],
+      notes: "Huele y sabe idéntico a los tradicionales.",
+      tags: ["protein", "vegcooked", "carbs"]
+    },
+    {
+      id: "pdf_5",
+      title: "Dürum de tofu",
+      ingredients: ["[Proteína] Tofu kebab","[Verdulería] Lechuga","[Verdulería] Tomate","[Verdulería] Cebolla","[Despensa] Tortitas XXL","[Despensa] Salsa de yogur vegano"],
+      steps: ["Salpimentar y dorar el tofu kebab en una sartén con un chorrito de aceite.","Calentar ligeramente las tortitas XXL en una plancha limpia.","Colocar la base de lechuga, tomate y cebolla en rodajas, añadir el tofu y aderezar con la salsa de yogur antes de enrollar."],
+      notes: "Cena rápida ideal.",
+      tags: ["protein", "vegraw", "carbs"]
+    },
+    {
+      id: "pdf_6",
+      title: "Boniato relleno",
+      ingredients: ["[Verdulería] Boniato grande","[Legumbres] Alubias moradas","[Verdulería] Pimiento padrón o verde","[Verdulería] Cebolla","[Despensa] Especias al gusto"],
+      steps: ["Asar el boniato entero al horno o al microondas hasta que el corazón esté tierno.","Hacer un sofrito rápido con la cebolla picada y los pimientos. Añadir las alubias moradas escurridas.","Abrir el boniato por la mitad de forma longitudinal, machacar un poco su pulpa e introducir el relleno."],
+      notes: "Receta sacada de tu listado semanal de febrero.",
+      tags: ["protein", "vegcooked", "carbs"]
+    }
+  ];
+}
+
+// Inicialización automática
+loadLocalData();
+initCalendar();
+</script>
+</body>
+</html>
