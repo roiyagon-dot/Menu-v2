@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Menú Vegano</title>
+    <style>
+        :root {
+            --p: #4a7c59; --v: #8eb070; --h: #c17f3a; --bg: #f8f5f0;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        h1 { font-size: 1.4rem; color: var(--p); text-align: center; }
+        
+        .card { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        
+        /* Tabla scrollable para móvil */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: var(--p); color: white; padding: 10px; font-size: 0.8rem; }
+        td { border: 1px solid #eee; padding: 8px; width: 14%; }
+
+        .cell { display: flex; flex-direction: column; gap: 4px; }
+        select { width: 100%; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; padding: 5px; background: #fff; }
+        
+        .indicator { font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 3px; color: white; display: inline-block; }
+        .i-p { background: var(--p); }
+        .i-v { background: var(--v); }
+        .i-h { background: var(--h); }
+
+        .input-manual { font-size: 11px; border: none; border-bottom: 1px solid #eee; width: 100%; margin-top: 2px; }
+
+        .btn { background: var(--p); color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; font-weight: bold; margin-top: 10px; -webkit-appearance: none; }
+        .btn-list { background: var(--h); }
+
+        #listaCompra { display: none; background: #fffdf0; border-left: 5px solid var(--h); }
+        ul { padding-left: 20px; column-count: 2; }
+    </style>
+</head>
+<body>
+
+<h1>🌿 Mi Menú Semanal</h1>
+
+<div class="card table-container">
+    <table id="menuTable">
+        <thead>
+            <tr id="headerDias"><th>Tipo</th></tr>
+        </thead>
+        <tbody id="menuBody"></tbody>
+    </table>
+</div>
+
+<button class="btn" onclick="saveMenu()">💾 Guardar Semana</button>
+<button class="btn btn-list" onclick="generateList()">🛒 Ver Lista de la Compra</button>
+
+<div id="listaCompra" class="card">
+    <h3>Lista de la Compra</h3>
+    <ul id="itemsLista"></ul>
+</div>
+
+<script>
+    // Base de datos de tus archivos
+    const recetas = {
+        "Beef & Brocauli": { p: "Soia", v: "Brócoli, Ceboliña", h: "Arroz", ing: ["Soia", "Brócoli", "Salsa Soia", "Xenxibre"] },
+        "Börek": { p: "Tofu, Feta, Avellanas", v: "Espinacas, Tomates secos", h: "Masa filo", ing: ["Masa filo", "Espinacas", "Tofu", "Tomates secos", "Avellanas"] },
+        "Boloñesa Tofu": { p: "Tofu ahumado", v: "Tomate, Zanahoria", h: "Pasta", ing: ["Tofu ahumado", "Salsa tomate", "Pasta", "Zanahoria"] },
+        "Callos Veganos": { p: "Garbanzos, Yuba", v: "Setas, Zanahoria", h: "Pan", ing: ["Garbanzos", "Yuba", "Setas", "Pan", "Pimentón"] },
+        "Dürum Tofu": { p: "Tofu kebab", v: "Lechuga, Tomate", h: "Tortita XXL", ing: ["Tortitas", "Tofu", "Lechuga", "Tomate", "Salsa yogur"] },
+        "Bourgignon": { p: "Seitán", v: "Champiñones, Zanahoria", h: "Patata", ing: ["Seitán", "Vino tinto", "Champiñones", "Patatas"] }
+    };
+
+    const dias = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    const tipos = ["Comida", "Cena"];
+
+    // Cargar menú
+    function init() {
+        const header = document.getElementById('headerDias');
+        dias.forEach(d => header.innerHTML += `<th>${d}</th>`);
+
+        const body = document.getElementById('menuBody');
+        const savedData = JSON.parse(localStorage.getItem('menuVegano') || '{}');
+
+        tipos.forEach(tipo => {
+            let row = `<tr><td><strong>${tipo}</strong></td>`;
+            dias.forEach(dia => {
+                const id = `${tipo}-${dia}`;
+                const val = savedData[id] || {nombre: "", p: "", v: "", h: ""};
+                row += `
+                    <td>
+                        <div class="cell">
+                            <select onchange="fill('${id}', this.value)">
+                                <option value="">-</option>
+                                ${Object.keys(recetas).map(r => `<option value="${r}" ${val.nombre===r?'selected':''}>${r}</option>`).join('')}
+                            </select>
+                            <input class="input-manual" id="p-${id}" value="${val.p}" placeholder="Pro...">
+                            <input class="input-manual" id="v-${id}" value="${val.v}" placeholder="Ver...">
+                            <input class="input-manual" id="h-${id}" value="${val.h}" placeholder="Hid...">
+                        </div>
+                    </td>`;
+            });
+            body.innerHTML += row + `</tr>`;
+        });
+    }
+
+    function fill(id, receta) {
+        if(recetas[receta]) {
+            document.getElementById(`p-${id}`).value = recetas[receta].p;
+            document.getElementById(`v-${id}`).value = recetas[receta].v;
+            document.getElementById(`h-${id}`).value = recetas[receta].h;
+        }
+    }
+
+    function saveMenu() {
+        const data = {};
+        tipos.forEach(t => dias.forEach(d => {
+            const id = `${t}-${d}`;
+            data[id] = {
+                nombre: document.querySelector(`select[onchange*="${id}"]`).value,
+                p: document.getElementById(`p-${id}`).value,
+                v: document.getElementById(`v-${id}`).value,
+                h: document.getElementById(`h-${id}`).value
+            };
+        }));
+        localStorage.setItem('menuVegano', JSON.stringify(data));
+        alert("¡Guardado en tu iPhone!");
+    }
+
+    function generateList() {
+        const lista = new Set();
+        document.querySelectorAll('select').forEach(s => {
+            if(recetas[s.value]) recetas[s.value].ing.forEach(i => lista.add(i));
+        });
+        
+        const ul = document.getElementById('itemsLista');
+        ul.innerHTML = "";
+        lista.forEach(i => ul.innerHTML += `<li>${i}</li>`);
+        document.getElementById('listaCompra').style.display = lista.size ? 'block' : 'none';
+        if(!lista.size) alert("Selecciona platos primero");
+    }
+
+    init();
+</script>
+</body>
+</html>
