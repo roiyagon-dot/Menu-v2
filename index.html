@@ -1,101 +1,655 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Sincronizado Vegano</title>
-    <style>
-        /* Estilo optimizado para iPhone 14 y Escritorio */
-        :root { --p: #4a7c59; --bg: #f8f5f0; }
-        body { font-family: sans-serif; background: var(--bg); padding: 10px; }
-        .container { max-width: 900px; margin: auto; background: white; border-radius: 15px; padding: 15px; shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .scroll-area { overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; }
-        th { background: var(--p); color: white; padding: 10px; font-size: 12px; }
-        td { border: 1px solid #eee; padding: 5px; }
-        input, select { width: 100%; border: 1px solid #ddd; padding: 8px; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
-        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        button { flex: 1; padding: 12px; border-radius: 8px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
-        .btn-sync { background: #3a6e8b; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Menú Vegano</title>
+<style>
+:root {
+  --p:#4a7c59; --p2:#3a6347; --a:#c17f3a; --a2:#a06828;
+  --pro:#c17f3a; --vr:#4a7c59; --vc:#3a6e8b; --hid:#8b4a6b;
+  --bg:#f5f0e8; --card:#fffdf8; --border:#d8cfc0; --muted:#7a6a58;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#2a2018;min-height:100vh}
+
+/* ── Header ── */
+header{background:#2a2018;color:var(--bg);padding:14px 16px;position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:8px}
+header h1{font-size:1.2rem;font-weight:600;letter-spacing:-.3px}
+header h1 span{color:var(--a);font-style:italic}
+.tabs{display:flex;gap:4px}
+.tab{background:transparent;border:1px solid rgba(245,240,232,.25);color:var(--bg);padding:5px 12px;border-radius:16px;font-size:.78rem;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.tab.on,.tab:hover{background:var(--a);border-color:var(--a)}
+
+/* ── Pages ── */
+.page{display:none;padding:14px 12px}.page.on{display:block}
+
+/* ── Week nav ── */
+.week-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.week-bar h2{flex:1;font-size:1rem;font-weight:600;text-align:center}
+.wbtn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:.9rem;color:#2a2018}
+.wbtn:hover{background:var(--p);color:#fff;border-color:var(--p)}
+
+/* ── Legend ── */
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.leg{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── Grid ── */
+.week-grid{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.grid{display:grid;grid-template-columns:52px repeat(7,minmax(100px,1fr));gap:4px;min-width:760px}
+.gh{background:#2a2018;color:var(--bg);padding:6px 4px;border-radius:6px;text-align:center;font-size:.7rem;font-weight:500}
+.glabel{display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:600;color:var(--p);background:#e8f4ed;border-radius:6px;padding:3px;min-height:24px;grid-column:1}
+.gsep{grid-column:1/-1;height:4px}
+.cell{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;min-height:80px;cursor:pointer;position:relative;transition:box-shadow .2s}
+.cell:hover{box-shadow:0 2px 10px rgba(42,32,24,.1)}
+.cell-name{font-size:.75rem;font-weight:600;margin-bottom:4px;line-height:1.3;color:#2a2018}
+.cell-tags{display:flex;flex-wrap:wrap;gap:2px}
+.tag{font-size:.6rem;padding:1px 5px;border-radius:8px;font-weight:500;white-space:nowrap}
+.t-pro{background:#fdf0e0;color:var(--pro);border:1px solid #f0d8b0}
+.t-vr{background:#e8f4ed;color:var(--vr);border:1px solid #b8d8c4}
+.t-vc{background:#e0eef4;color:var(--vc);border:1px solid #b0cedd}
+.t-hid{background:#f4e8f0;color:var(--hid);border:1px solid #d8b8cc}
+.add-btn{width:100%;height:100%;min-height:68px;background:transparent;border:1px dashed var(--border);border-radius:8px;cursor:pointer;color:var(--muted);font-size:1.4rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.add-btn:hover,.add-btn:active{border-color:var(--p);color:var(--p);background:#e8f4ed}
+.del-btn{position:absolute;top:3px;right:3px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.65rem;opacity:0;padding:2px 4px;border-radius:4px;transition:opacity .2s}
+.cell:hover .del-btn{opacity:1}
+.del-btn:hover{color:#c0392b;background:#fde8e8}
+.prep-btn{position:absolute;bottom:3px;right:3px;background:var(--bg);border:none;cursor:pointer;color:var(--muted);font-size:.6rem;opacity:0;padding:2px 5px;border-radius:4px;font-family:inherit;transition:opacity .2s}
+.cell:hover .prep-btn{opacity:1}
+.prep-btn:hover{color:var(--p);background:#e8f4ed}
+
+/* ── Buttons ── */
+.btn{display:block;width:100%;background:var(--p);color:#fff;border:none;padding:12px;border-radius:12px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;transition:background .2s}
+.btn:hover,.btn:active{background:var(--p2)}
+.btn.sec{background:var(--a)}.btn.sec:hover{background:var(--a2)}
+.btn-row{display:flex;gap:8px}.btn-row .btn{flex:1;font-size:.85rem;padding:10px}
+
+/* ── Modals ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(42,32,24,.5);z-index:100;align-items:flex-end;justify-content:center;padding:0}
+.overlay.on{display:flex}
+.sheet{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;padding:20px 16px 32px}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px}
+.sheet h3{font-size:1.1rem;font-weight:700;margin-bottom:14px}
+.form-row{margin-bottom:11px}
+.form-row label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin-bottom:3px}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:9px;background:var(--bg);color:#2a2018;font-family:inherit;font-size:.88rem}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--p)}
+.form-row textarea{min-height:75px;resize:vertical}
+.autocomplete{position:relative}
+.ac-list{position:absolute;width:100%;background:var(--card);border:1px solid var(--border);border-radius:9px;box-shadow:0 4px 16px rgba(42,32,24,.1);z-index:10;max-height:160px;overflow-y:auto;top:100%;left:0;display:none}
+.ac-item{padding:9px 12px;cursor:pointer;font-size:.85rem}
+.ac-item:hover,.ac-item:active{background:var(--bg)}
+.ac-item small{color:var(--muted);font-size:.72rem;display:block}
+.sheet-actions{display:flex;gap:8px;margin-top:14px}
+.sheet-actions .btn{margin-bottom:0}
+
+/* ── Recipe view ── */
+.recipe-title{font-size:1.3rem;font-weight:700;margin-bottom:4px}
+.recipe-sub{color:var(--muted);font-size:.82rem;margin-bottom:12px}
+.macro-row{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.r2col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:400px){.r2col{grid-template-columns:1fr}}
+.r-section h5{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;padding-bottom:3px;border-bottom:1px solid var(--border)}
+.ing-list{list-style:none;padding:0}
+.ing-list li{font-size:.82rem;padding:3px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:5px}
+.ing-list li::before{content:'·';color:var(--p);font-size:1rem;flex-shrink:0}
+.steps-list{list-style:none;padding:0;counter-reset:st}
+.steps-list li{font-size:.82rem;padding:5px 0 5px 24px;position:relative;counter-increment:st;border-bottom:1px solid var(--border);line-height:1.5}
+.steps-list li::before{content:counter(st);position:absolute;left:0;top:6px;background:var(--p);color:#fff;border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700}
+.recipe-notes{background:#fffde8;border-radius:8px;padding:8px 11px;font-size:.78rem;color:var(--muted);font-style:italic;margin-top:10px;grid-column:1/-1}
+.full-col{grid-column:1/-1}
+
+/* ── Shopping ── */
+.shop-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.shop-header h2{font-size:1.1rem;font-weight:700}
+.shop-sub{color:var(--muted);font-size:.78rem;margin-top:2px}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.shop-grid{grid-template-columns:1fr}}
+.shop-sec{background:var(--card);border-radius:10px;padding:12px}
+.shop-sec h4{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:7px}
+.shop-item{display:flex;align-items:center;gap:7px;padding:3px 0;font-size:.83rem}
+.shop-item input[type=checkbox]{accent-color:var(--p);width:14px;height:14px;flex-shrink:0}
+.shop-item.ck span{text-decoration:line-through;color:var(--muted)}
+.no-items{color:var(--muted);font-style:italic;padding:40px;text-align:center;font-size:.9rem}
+.ios-btn{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:.8rem;color:#2a2018;display:flex;align-items:center;gap:5px;transition:all .2s}
+.ios-btn:hover{border-color:#555}
+
+/* ── Recipes page ── */
+.recipes-bar{display:flex;gap:8px;margin-bottom:14px}
+.search{flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:9px;background:var(--card);color:#2a2018;font-family:inherit;font-size:.88rem}
+.rec-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:360px){.rec-grid{grid-template-columns:1fr}}
+.rec-card{background:var(--card);border-radius:12px;padding:13px;border:1px solid var(--border)}
+.rec-card h4{font-size:.88rem;font-weight:700;margin-bottom:6px;line-height:1.3}
+.rec-card .tags{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:7px}
+.rec-card .ings{font-size:.72rem;color:var(--muted);line-height:1.5;margin-bottom:8px}
+.rec-actions{display:flex;gap:4px;flex-wrap:wrap}
+.xbtn{font-size:.7rem;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--bg);color:#2a2018;transition:all .2s;white-space:nowrap}
+.xbtn:hover{background:var(--p);color:#fff;border-color:var(--p)}
+.xbtn.view{background:#e8f4ed;color:var(--p);border-color:#b8d8c4}
+.xbtn.del:hover{background:#c0392b;border-color:#c0392b;color:#fff}
+
+/* ── Notification ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#2a2018;color:var(--bg);padding:10px 18px;border-radius:20px;font-size:.85rem;z-index:200;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
 </head>
 <body>
 
-<div class="container">
-    <h2>🌿 Menú Sincronizado</h2>
-    
-    <div class="btn-group">
-        <button onclick="saveToCloud()" class="btn-sync">☁️ Guardar y Sincronizar</button>
-        <button onclick="generateList()">🛒 Lista Compra</button>
-    </div>
+<header>
+  <h1>🌿 Menú <span>Vegano</span></h1>
+  <div class="tabs">
+    <button class="tab on" onclick="showPage('planner')">Semana</button>
+    <button class="tab" onclick="showPage('shopping')">🛒</button>
+    <button class="tab" onclick="showPage('recipes')">📖</button>
+  </div>
+</header>
 
-    <div class="scroll-area">
-        <table>
-            <thead>
-                <tr id="header"><th>Tipo</th></tr>
-            </thead>
-            <tbody id="content"></tbody>
-        </table>
-    </div>
+<!-- ══ PLANNER ══ -->
+<div class="page on" id="page-planner">
+  <div class="week-bar">
+    <button class="wbtn" onclick="prevWeek()">◀</button>
+    <h2 id="week-label">—</h2>
+    <button class="wbtn" onclick="nextWeek()">▶</button>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="dot" style="background:var(--pro)"></div>Proteína</div>
+    <div class="leg"><div class="dot" style="background:var(--vr)"></div>Verd. cruda</div>
+    <div class="leg"><div class="dot" style="background:var(--vc)"></div>Verd. cocinada</div>
+    <div class="leg"><div class="dot" style="background:var(--hid)"></div>Hidratos</div>
+  </div>
+  <div class="week-grid">
+    <div class="grid" id="week-grid"></div>
+  </div>
+  <div style="margin-top:12px">
+    <button class="btn sec" onclick="genShopping()">🛒 Generar lista de la compra</button>
+  </div>
 </div>
 
+<!-- ══ SHOPPING ══ -->
+<div class="page" id="page-shopping">
+  <div class="shop-header">
+    <div>
+      <h2>Lista de la compra</h2>
+      <div class="shop-sub" id="shop-sub">Genera la lista desde el planificador</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="ios-btn" onclick="exportICS()">📱 Recordatorios</button>
+      <button class="ios-btn" onclick="clearChecked()">✓ Limpiar</button>
+    </div>
+  </div>
+  <div id="shop-container"><p class="no-items">Genera la lista desde el planificador 🌿</p></div>
+</div>
+
+<!-- ══ RECIPES ══ -->
+<div class="page" id="page-recipes">
+  <div class="recipes-bar">
+    <input type="text" class="search" id="rec-search" placeholder="Buscar receta…" oninput="filterRecs(this.value)">
+    <button class="btn" style="width:auto;padding:9px 14px;margin:0;font-size:.85rem" onclick="openNewRec()">+ Nueva</button>
+  </div>
+  <div class="rec-grid" id="rec-grid"></div>
+</div>
+
+<!-- ══ MODAL: Add/edit meal ══ -->
+<div class="overlay" id="meal-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="meal-title">Añadir plato</h3>
+    <div class="form-row">
+      <label>Nombre del plato</label>
+      <div class="autocomplete">
+        <input type="text" id="m-name" placeholder="Ej: Lentejas" oninput="ac(this.value)" autocomplete="off">
+        <div class="ac-list" id="ac-list"></div>
+      </div>
+    </div>
+    <div class="form-row"><label>🟠 Proteína</label><input type="text" id="m-pro" placeholder="Ej: Lentejas, Tofu"></div>
+    <div class="form-row"><label>🟢 Verdura cruda</label><input type="text" id="m-vr" placeholder="Ej: Tomate, Lechuga"></div>
+    <div class="form-row"><label>🔵 Verdura cocinada</label><input type="text" id="m-vc" placeholder="Ej: Espinacas, Brócoli"></div>
+    <div class="form-row"><label>🟣 Hidratos</label><input type="text" id="m-hid" placeholder="Ej: Arroz, Pasta, Pan"></div>
+    <div class="form-row"><label>Comida / Cena</label>
+      <select id="m-type"><option value="comida">🍽 Comida</option><option value="cena">🌙 Cena</option></select>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.83rem;cursor:pointer;margin-bottom:14px">
+      <input type="checkbox" id="m-save" style="accent-color:var(--p);width:15px;height:15px">
+      Guardar como receta para reutilizar
+    </label>
+    <div class="sheet-actions">
+      <button class="btn" style="background:#ddd;color:#555" onclick="closeMeal()">Cancelar</button>
+      <button class="btn" onclick="saveMeal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Recipe view ══ -->
+<div class="overlay" id="view-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div id="view-content"></div>
+    <div class="sheet-actions" style="margin-top:16px">
+      <button class="btn" style="background:#ddd;color:#555" onclick="closeView()">Cerrar</button>
+      <button class="btn" id="view-edit-btn">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: Recipe edit ══ -->
+<div class="overlay" id="rec-overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h3 id="rec-title">Nueva receta</h3>
+    <div class="form-row"><label>Nombre</label><input type="text" id="r-name" placeholder="Ej: Ramen tantanmen"></div>
+    <div class="form-row"><label>🟠 Proteína</label><input type="text" id="r-pro"></div>
+    <div class="form-row"><label>🟢 Verdura cruda</label><input type="text" id="r-vr"></div>
+    <div class="form-row"><label>🔵 Verdura cocinada</label><input type="text" id="r-vc"></div>
+    <div class="form-row"><label>🟣 Hidratos</label><input type="text" id="r-hid"></div>
+    <div class="form-row"><label>Ingredientes (uno por línea)</label><textarea id="r-ing" placeholder="Tofu&#10;Alga kombu&#10;Fideos&#10;Miso"></textarea></div>
+    <div class="form-row"><label>Preparación (un paso por línea)</label><textarea id="r-steps" placeholder="Hidratar las setas 30 min.&#10;Sofreír ajo y cebollino.&#10;Añadir el caldo." style="min-height:90px"></textarea></div>
+    <div class="form-row"><label>Notas</label><input type="text" id="r-notes" placeholder="Ej: Se puede congelar"></div>
+    <input type="hidden" id="r-id">
+    <div class="sheet-actions">
+      <button class="btn" style="background:#ddd;color:#555" onclick="closeRec()">Cancelar</button>
+      <button class="btn" onclick="saveRec()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-    // DATOS DE TU LIBRO DE RECETAS (PDF)
-    const db = {
-        "Beef & Brocauli": {p:"Soia", v:"Brócoli", h:"Arroz", ing:["Soia","Brócoli","Salsa Soia"]},
-        "Börek": {p:"Tofu/Feta", v:"Espinacas", h:"Masa filo", ing:["Masa filo","Espinacas","Tofu"]},
-        "Boloñesa": {p:"Tofu ahumado", v:"Tomate", h:"Pasta", ing:["Tofu","Tomate","Pasta"]},
-        "Callos": {p:"Garbanzos/Yuba", v:"Setas", h:"Pan", ing:["Garbanzos","Yuba","Setas"]},
-        "Dürum": {p:"Tofu kebab", v:"Lechuga/Tomate", h:"Tortita", ing:["Tofu","Tortitas","Verdura"]}
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const DAYS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+
+const DEFAULT_RECIPES=[
+  {id:'r1',name:'Beef & Brócoli',pro:'Soja texturizada',vr:'',vc:'Brócoli',hid:'',ing:['Filete de soja','Brócoli','Jengibre','Ajo','Cebollino chino','Salsa soja oscura','Salsa soja','Azúcar moreno','Caldo'],steps:['Hidratar la soja en agua hirviendo según fabricante (mín. 30 min).','Hacer un sofrito con ajo, cebollino y jengibre. Cocer el brócoli en el micro.','Mezclar salsas de soja, caldo y azúcar. Añadir a la soja escurrida y juntar con el sofrito.'],notes:'Con pimiento verde queda espectacular. Aceite de girasol para no restar sabor.'},
+  {id:'r2',name:'Börek',pro:'Tofu',vr:'',vc:'Espinacas, Tomates secos',hid:'Masa filo',ing:['Cebolla','Ajo','Espinacas frescas','Tofu desmigajable','Tomates secos en aceite','Avellanas','Queso feta vegano (opcional)','Masa filo','Pimienta','Tomillo','Romero','Perejil'],steps:['Pochar la cebolla y el ajo.','Añadir el tofu en trozos irregulares.','Cuando suelte agua añadir tomates picados y avellanas. Tostar un poco.','Añadir especias y vino blanco. Reducir.','Añadir espinacas y un chorrito de caldo. Cocinar 5 min.','Poner 3-4 hojas de filo pintadas con aceite. Colocar el relleno y enrollar formando espiral.','Hornear a 180°C 25-35 min con semillas de sésamo por encima.'],notes:''},
+  {id:'r3',name:'Boloñesa de tofu ahumado',pro:'Tofu ahumado',vr:'',vc:'Tomate',hid:'Pasta',ing:['Tofu ahumado','Salsa de tomate','Pasta tiburones o rigatoni'],steps:['Desmenuzar el tofu y tostarlo en sartén mientras se cuece la pasta.','Cuando el tofu esté bien tostado añadir el tomate.','Cocer la pasta al dente (tiempo recomendado menos 2 min). Añadir a la salsa con 200ml del agua de cocción. Integrar 1-2 min.'],notes:'Las cosas importantes: pasta al dente y agua de cocción.'},
+  {id:'r4',name:'Boloñesa de legumbres',pro:'Legumbres varias',vr:'',vc:'Tomate, Pimiento, Zanahoria',hid:'Pasta',ing:['Legumbres secas (garbanzo, lenteja, alubia roja)','Cebolla','Ajo','Perejil','Leche de soja o agua','Tomate','Zanahoria','Pimiento'],steps:['Remojar las legumbres 12h.','Picar bien la mezcla y dejar reposar 10 min.','Sofreír verduras. Añadir la mezcla a fuego medio. Añadir tomate e ir añadiendo nata de soja o agua en ciclos.','Cocer la pasta y usar su agua también. Ajustar la salsa al gusto.'],notes:'Cocinar más tiempo para que la digestión no sea pesada.'},
+  {id:'r5',name:'Boniato relleno',pro:'Alubias moradas',vr:'',vc:'Pimiento rojo, Cebolla',hid:'Boniato',ing:['Boniato','Cebolla','Pimiento rojo','Alubias moradas cocidas','Tofu marinado (opcional)','Aceite de oliva','Pimentón dulce','Ajo en polvo'],steps:['Pinchar y hornear el boniato hasta que esté tierno (10 min en microondas).','Saltear cebolla, ajo y pimiento con sal y especias (10 min).','Añadir alubias cocidas y chorrito de limón, integrar 5 min.','Hacer puré del interior del boniato y rellenar con la mezcla.'],notes:'Servir fresco con salsa de yogur o gratinado con parmesano vegano.'},
+  {id:'r6',name:'Bourguignon de seitán',pro:'Seitán',vr:'',vc:'Zanahoria, Champiñones, Cebolla',hid:'Puré de patatas',ing:['Seitán','Harina','Cebolla','Ajo','Zanahorias','Champiñones','Vino tinto','Caldo vegetal','Tomillo','Laurel','Patatas','Leche de soja caliente','Margarina o AOVE'],steps:['Rebozar el seitán en harina y sofreír en AOVE. Reservar.','Pochar cebolla y ajo bien picados.','Agregar zanahorias y champiñones.','Desglasas con la mitad del vino.','Añadir seitán, hierbas y resto del vino. Cuando reduzca, añadir caldo.','Rectificar de sal y pimienta. Cocinar hasta que la salsa ligue.','Puré: cocer patatas en dados y hacer puré con leche y margarina.'],notes:''},
+  {id:'r7',name:'Brócoli con chimichurri y hummus',pro:'Alubias',vr:'',vc:'Brócoli',hid:'',ing:['Brócoli','Alubias cocidas (½ bote)','Ajo','Tahini','Limón','Levadura nutricional','AOVE','Sal','Pimienta negra','Perejil fresco','Orégano','Cayena','Vinagre de manzana'],steps:['Triturar ½ bote de alubias con ajo, tahini, limón, levadura nutricional, aceite, sal y pimienta.','Cortar el brócoli a láminas y hacer a la plancha (o micro antes).','Preparar el chimichurri mezclando perejil, ajo rallado, orégano, cayena, limón, AOVE y vinagre.','Emplatar con el hummus como base, el brócoli y el chimichurri por encima.'],notes:'El chimichurri no se conserva bien. El hummus dura varios días en nevera.'},
+  {id:'r8',name:'Callos veganos',pro:'Garbanzos',vr:'',vc:'Setas variadas',hid:'',ing:['Garbanzos','Shitake deshidratado','Boletus deshidratados','Oreja de judas deshidratada','Yuba piel de tofu','Pan reseso','Ajo','Cebolla','Zanahoria','Pimentón dulce y picante','Ajo en polvo','Cebolla en polvo','Clavo','Comino'],steps:['Poner a remojo la noche anterior: garbanzos por un lado; setas y yuba con especias (pimentón y mucho comino).','Sofreír ajo, cebolla y zanahoria rallada con pimentón y comino. Triturar y añadir a la olla.','Calentar los garbanzos con el agua de las setas e ir picando las setas.','Añadirlo todo con el pan desmigajado. Corregir sabor.','Cocinar hasta que los garbanzos estén bien cocidos.'],notes:'La yuba y las setas dan una textura muy similar a los callos originales.'},
+  {id:'r9',name:'Dürum de tofu',pro:'Tofu',vr:'Lechuga, Tomate, Cebolla',vc:'',hid:'Tortita XXL',ing:['Lechuga','Tomate','Cebolla','Tortitas XXL','Tofu','Sal','Pimienta','Pimentón ahumado','Salsa soja','Ajo en polvo','Yogur de soja','Orégano','Limón','Pimiento'],steps:['Cortar el tofu en láminas lo más finas posible.','Planchar con AOVE; cuando empiece a dorar añadir especias y salsa soja. Cocinar hasta dorar bien.','Mezclar los ingredientes de la salsa de yogur.','Montar: tortita, tofu, verduras y salsa.'],notes:'La salsa de yogur dura días en nevera.'},
+  {id:'r10',name:'Esparragado de garbanzos',pro:'Garbanzos',vr:'',vc:'Espinacas',hid:'Pan',ing:['Espinacas frescas','Garbanzos cocidos','Cebolla','Ajo','Pan reseso','Avellanas','Vinagre','Comino','Orégano','Pimentón dulce','Sal','AOVE'],steps:['Picar la cebolla y reservar.','Freír los ajos enteros en aceite hasta dorar. Llevar al vaso de la batidora.','Freír el pan y añadir junto a los ajos a la batidora.','Pochar la cebolla en el mismo aceite. Bajar fuego, añadir pimentón y rápidamente las espinacas. Salpimentar y tapar.','Añadir garbanzos y orégano. Cocinar 2 min.','Triturar ajos, pan y avellanas con vinagre.','Añadir el majado y cocinar 10 min para armonizar sabores.'],notes:'Añadir agua si se seca. El majado se puede guardar meses en nevera.'},
+  {id:'r11',name:'Fabes con verduras',pro:'Alubias',vr:'',vc:'Calabacín, Zanahoria, Puerro',hid:'',ing:['Alubias (remojo 12h)','Pimentón','Calabacín','Zanahoria','Puerro','Ajo'],steps:['Hidratar las alubias mínimo 12h.','Triturar las verduras y rehogar con sal hasta que se pochen (8-10 min). Reservar parte para espesar.','Añadir una cucharada de pimentón, las alubias escurridas y agua. Cocer a fuego lento. ¡Chup, chup!'],notes:''},
+  {id:'r12',name:'Falafel',pro:'Garbanzos',vr:'',vc:'',hid:'Pan pita',ing:['Ajo','Cebolla fresca','Perejil fresco (15g)','Comino','Cúrcuma','Pimienta','Sal','Levadura química','Harina de garbanzo','Garbanzos crudos remojados (250g)'],steps:['Picar todo y mezclar bien. Mejor si quedan algunos trocitos de garbanzo.','Dejar reposar 30-60 min.','Dar forma de bola o disco con las manos húmedas.','Congelar en taper (precongelación) y luego pasar a bolsa.','Freír en aceite o freidora de aire.'],notes:'Congela de maravilla.'},
+  {id:'r13',name:'Frijoles',pro:'Frijoles',vr:'',vc:'Zanahoria, Calabacín, Cebolla',hid:'Arroz',ing:['Cebolla','Ajo','Zanahoria','Calabacín','Ron','Frijoles cocidos','Limón','Laurel','Mezcla especias indias','Comino','Tomate concentrado'],steps:['Rustrir cebolla y ajo en olla ancha.','Añadir zanahoria y calabacín rallados.','Añadir sal, laurel y especias. Luego un chorrito de ron.','Cuando reduzca añadir los frijoles, tomate concentrado y zumo de limón.','Integrar y corregir de sabor.'],notes:'Siempre con arroz. También con tostones o fajitas.'},
+  {id:'r14',name:'Guacatofu',pro:'Tofu firme',vr:'Aguacate',vc:'',hid:'',ing:['1 aguacate','Tofu firme (125g)','Zumo de medio limón','Levadura nutricional (2 cdas)','Ajo en polvo','Sal','Pimienta','Aceite de oliva (2-3 cdas)','Hierba limón'],steps:['Triturar todo en la batidora.','Pasar a un tupper o manga pastelera.','Espolvorear hierba limón y opcionalmente albahaca u orégano.'],notes:'Dura una semana en nevera. Ideal para desayuno o como hummus.'},
+  {id:'r15',name:'Judiones en salsa de calabaza',pro:'Judiones',vr:'',vc:'Calabaza, Espinacas, Cebolla',hid:'Pan',ing:['1 bote judiones','4 rodajas calabaza','Anacardos remojados (50g)','Levadura nutricional (1 cda)','Espinacas frescas (100g)','Cebolla','Ajo','Vino blanco','Sal y pimienta','Avellanas tostadas'],steps:['Asar la calabaza con aceite, sal y pimienta hasta que esté blandita.','Pochar la cebolla y el ajo. Desglasas con vino blanco.','Agregar los judiones con el aquafaba y remover.','Incorporar las espinacas y cocinar 5 min más.','Triturar la calabaza con los anacardos y la levadura nutricional. Añadir a la cacerola.','Rectificar de sal y pimienta.','Servir con avellanas tostadas y pan.'],notes:''},
+  {id:'r16',name:'Lentejas',pro:'Lentejas',vr:'',vc:'Zanahoria, Calabacín, Pimiento, Cebolla',hid:'',ing:['Lentejas (400g)','Agua (1,6L)','Cebolla','Zanahoria','Pimiento verde','Pimiento rojo','Ajo','Tomate concentrado','Laurel','Pimienta negra','Sal','Calabacín','Pimentón dulce','Pimentón picante','Comino','Aceite de oliva'],steps:['Poner todo en una cazuela con el agua. Llevar a ebullición y bajar a fuego suave.','Picar el calabacín y zanahoria extra en daditos. Saltear la zanahoria y añadir el calabacín y las especias.','Cuando las lentejas estén hechas, sacar las verduras a la batidora y triturar.','Mezclar todo y servir.'],notes:'Receta de El Comidista (4 personas).'},
+  {id:'r17',name:'Marry me pasta',pro:'Tofu crujiente',vr:'',vc:'Tomates secos',hid:'Pasta mafalda',ing:['Pasta mafalda','Ajo (2-3 dientes)','Tomate seco en aceite (120g)','Nata de soja (200g)','Caldo de verduras (125g)','Levadura nutricional (2 cdas)','Sal','Pimienta','Pimentón dulce','Orégano','Tofu (½ bloque rallado)','Aceite','Salsa soja'],steps:['Poner a cocer la pasta.','Sofreír el ajo y agregar los tomates bien picados, 2 min.','Añadir especias, nata, caldo, levadura y sal.','Saltear el tofu hasta que esté dorado y crujiente.','Añadir la pasta a la salsa con agua de cocción.','Añadir el tofu y servir con albahaca.'],notes:'No es buena para recalentar. Recién hecha es TOP.'},
+  {id:'r18',name:'Muhammara',pro:'Nueces',vr:'',vc:'Pimientos rojos asados',hid:'Pan',ing:['2 pimientos rojos','1 diente de ajo','Pan rallado (2 cdas)','Nueces (½ taza)','Melaza de granada (1 cda)','Tahini (1 cda, opcional)','Comino','Chile en polvo'],steps:['Precalentar el horno a 200°C.','Cortar los pimientos en tiras, retirar semillas. Asar con aceite 20-30 min.','Dejar reposar tapados con film para que suden. Pelar una vez fríos.','Triturar con el resto de ingredientes.'],notes:''},
+  {id:'r19',name:'Mujaddara',pro:'Lentejas',vr:'',vc:'Cebolla caramelizada',hid:'Arroz basmati',ing:['Lentejas (100g)','Arroz basmati (100g)','2 cebollas grandes','Agua (225ml)','Comino (½ cdta)','Canela (½ cdta)','Sal y pimienta','AOVE','Yogur vegano (opcional)'],steps:['Cortar media cebolla en juliana y reservar. El resto en cubitos para caramelizar.','Una vez caramelizada añadir el arroz, el agua y las especias. Cocinar ~20 min.','Freír la cebolla en juliana hasta que esté crujiente.','Mezclar arroz con lentejas (si son de bote, añadir directamente).','Servir con cebolla frita por encima y yogur opcional.'],notes:'Guardar la cebolla frita separada para que no pierda el crujiente.'},
+  {id:'r20',name:'Nasi Goreng',pro:'Tofu',vr:'Cebollino chino',vc:'Espárragos',hid:'Arroz largo',ing:['Cebollino chino','Ajo','Jengibre','Jalapeño','Espárragos','Chile en polvo','Kecap Manis','Arroz largo (del día anterior)','Tofu'],steps:['Hacer el refrito asiático: jengibre, ajo y cebollino. Añadir el jalapeño.','Añadir los espárragos troceados.','Añadir el arroz, el tofu desmigajado y la salsa Kecap Manis. Saltear hasta bronceado.','Emplatar con el cebollino verde y chile en polvo.'],notes:'Simplemente delicioso.'},
+  {id:'r21',name:'Nozarella',pro:'',vr:'',vc:'',hid:'',ing:['Leche de soja (200ml)','Levadura nutricional (3 cdas)','Vinagre o limón (1 cda)','Fécula de maíz (5 cdas)','Yogur de soja (125g)'],steps:['Mezclar leche, aceite y vinagre en olla. Calentar removiendo.','Añadir levadura nutricional y sal removiendo.','Añadir fécula poco a poco a fuego bajo, remover con energía.','Añadir el yogur y batir hasta homogeneizar.','Poner en moldes o en papel film formando bolas.','Refrigerar al menos 2 horas.'],notes:'Dura una semana en nevera. No funde del todo pero queda cremosa.'},
+  {id:'r22',name:'Parvegano',pro:'',vr:'',vc:'',hid:'',ing:['Leche de soja (250g)','Levadura nutricional (40g)','Vinagre de arroz (20g)','Fécula de maíz (160g)','Miso blanco (60g)','Aceite de coco desodorizado (90g)','Mostaza Dijon (10g)','Sal'],steps:['Batir todos los ingredientes bien.','Pasar a recipiente resistente y cocinar al vapor 45 min.','Refrigerar mínimo 8h, idealmente 24h.'],notes:''},
+  {id:'r23',name:"Pau's pipsas (pizza)",pro:'',vr:'Tomate',vc:'',hid:'Masa pizza',ing:['Harina de fuerza (280g)','Sal (6g)','Agua (180g)','Levadura seca (5g)','AOVE (16g)'],steps:['Mezclar y amasar todos los ingredientes.','Fermentación 24h en nevera.','Dar forma y hornear con piedra.'],notes:'Rinde 2 pizzas medianas o 1 familiar.'},
+  {id:'r24',name:'Pesto de kale',pro:'Anacardos',vr:'',vc:'Kale',hid:'Pasta',ing:['Pasta','Kale','Levadura nutricional (4 cdas)','Ajo','Aceite de oliva (50g)','Anacardos (40g)','Sal','Pimienta negra','Ralladura de limón'],steps:['Separar hojas de kale del tallo. Triturar con ajo, anacardos, levadura, ralladura de limón, sal y pimienta, añadiendo el aceite lentamente.','Pasar a sartén honda.','Cuando la pasta esté al dente, añadirla con agua de cocción.','Cocinar hasta que esté cremoso.'],notes:'Para pesto clásico, sustituir kale por albahaca.'},
+  {id:'r25',name:'Pulled setas para burritos',pro:'Seta cardo',vr:'',vc:'Cebolla, Tomate',hid:'Tortilla',ing:['Seta cardo','Chipotle adobado','Cebolla','Tomate triturado','Caldo vegetal','Comino','Chile en polvo','Orégano'],steps:['Sofreír la cebolla hasta caramelizar. Mientras, poner las setas en el micro 5-10 min y deshilachar con tenedor.','Añadir 2 chipotles y 2 cdas de su salsa.','Especiar con orégano, comino y chile. Integrar 1 min.','Añadir tomate triturado y reducir 5 min.','Añadir caldo vegetal, integrar y opcionalmente triturar la salsa.','Mezclar con las setas. Reducir 10-15 min.'],notes:'Corre un alto riesgo de ser demasiado divertida.'},
+  {id:'r26',name:'Ramen tantanmen',pro:'Tofu',vr:'Cebolleta, Maíz',vc:'Brócoli, Setas',hid:'Fideos ramen',ing:['Crema de cacahuete (100g)','Tahini (100g)','Miso (150g)','Salsa soja (50g)','Azúcar moreno (15g)','Agua (1L)','Alga kombu (10g)','Shitake secas (20g)','Brócoli','Tofu','Maíz dulce','Alga nori','Cebolleta','Fideos ramen'],steps:['Dashi: hidratar setas y añadir el agua al caldo. Hervir, añadir setas y algas. Tapar y cocer a fuego lento 30 min. Colar.','Mezclar cacahuete, tahini, miso, salsa soja y azúcar para el tare.','Brócoli al vapor y saltear con aceite y sal. Tofu salteado hasta dorar. Setas salteadas con toque de salsa soja.','Montaje: diluir el tare en caldo. Añadir fideos y el dashi caliente. Poner toppings encima.'],notes:'El tare se puede guardar en nevera semanas o congelar meses.'},
+  {id:'r27',name:'Salmón de tofu',pro:'Tofu',vr:'',vc:'',hid:'Puré de patata',ing:['Tofu','Alga nori','Salsa soja','Vinagre de arroz','Azúcar moreno','Miso','Almidón de maíz','Ajo','Jengibre','Pimentón','Cúrcuma','Polvo de remolacha','Humo líquido (opcional)','Caldo (½L aprox)'],steps:['Prensar el tofu mínimo 20 min. Preparar el marinado triturando todos los ingredientes.','Cortar el tofu en forma de filetes de salmón. Hacer cortes para imitar las vetas.','Marinar mínimo 1h, idealmente una noche.','Cortar tiras de nori, mojar en marinado y unir al tofu.','Rebozar en almidón de maíz.','Planchar por todos los lados hasta que quede crujiente.'],notes:'Al congelar el sabor se intensifica, ideal troceado en ensalada a modo de atún.'},
+  {id:'r28',name:'Sobrasada de boniato',pro:'Anacardos',vr:'',vc:'Boniato asado, Tomates secos',hid:'',ing:['Boniato (350g asado)','Tomates secos (95g)','Anacardos (40g)','Pimentón dulce (3 cdtas)','Aceite del tomate (60ml)','Ajo en polvo','Comino','Perejil fresco','Zumo de limón (2 cdas)','Sal'],steps:['Asar el boniato entero a 200°C 35-40 min (o 10 min en micro, pinchado).','Sacar la pulpa y triturar todo con el resto de ingredientes.','¡Epic!'],notes:'Aunque no pongas anacardos ni perejil fresco sigue quedando brutal.'},
+  {id:'r29',name:'Tzatziki para gyros',pro:'',vr:'Pepino',vc:'',hid:'Pan pita',ing:['Pepino','Yogur de soja','Eneldo','Zumo de ½ limón','Aceite (2 cdas)','Ajo rallado'],steps:['Rallar el pepino con piel y escurrirlo bien.','Mezclar con el resto de ingredientes y listo.'],notes:'Aguanta 3-5 días en nevera. Se puede añadir menta. Para gyros: pan pita, cebolla morada, tomate, pepino y proteína vegana.'},
+  {id:'r30',name:'Webo (huevo vegano)',pro:'Tofu sedoso',vr:'',vc:'',hid:'',ing:['Tofu sedoso (400g)','Harina de garbanzo (2 cdas)','Cúrcuma','Sal negra','Levadura nutricional (2 cdas)'],steps:['Triturar todos los ingredientes en la batidora.','Usar como huevo revuelto en sartén o como base para tortillas.'],notes:'Aunque parezca poco líquido, así funciona. Dura una semana en nevera.'},
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let recipes=load('vegan_r')||deepCopy(DEFAULT_RECIPES);
+let meals=load('vegan_m')||{};
+let checked=load('vegan_ck')||{};
+let currentWeekStart=getMonday(new Date());
+let editMealKey=null;
+let editRecId=null;
+let shoppingItems=[];
+
+function load(k){try{const d=localStorage.getItem(k);return d?JSON.parse(d):null;}catch(e){return null;}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+
+// ══════════════════════════════════════
+// WEEK
+// ══════════════════════════════════════
+function getMonday(d){const dt=new Date(d);const day=dt.getDay();dt.setDate(dt.getDate()-day+(day===0?-6:1));dt.setHours(0,0,0,0);return dt;}
+function dk(d){return d.toISOString().split('T')[0];}
+function prevWeek(){currentWeekStart.setDate(currentWeekStart.getDate()-7);renderWeek();}
+function nextWeek(){currentWeekStart.setDate(currentWeekStart.getDate()+7);renderWeek();}
+function weekDates(){return Array.from({length:7},(_,i)=>{const d=new Date(currentWeekStart);d.setDate(d.getDate()+i);return d;});}
+
+function renderWeek(){
+  const dates=weekDates();
+  const fmt=d=>d.toLocaleDateString('es',{day:'numeric',month:'short'});
+  document.getElementById('week-label').textContent=`${fmt(dates[0])} – ${fmt(dates[6])}`;
+  const grid=document.getElementById('week-grid');
+  grid.innerHTML='';
+  // Header
+  grid.appendChild(E('div',''));
+  DAYS.forEach((d,i)=>{
+    const h=E('div','gh');
+    h.innerHTML=`<div>${d}</div><div style="font-size:.6rem;opacity:.7">${dates[i].getDate()}</div>`;
+    grid.appendChild(h);
+  });
+  // Rows
+  ['comida','cena'].forEach(type=>{
+    const sep=E('div','gsep');sep.style.gridColumn='1/-1';grid.appendChild(sep);
+    const lbl=E('div','glabel');lbl.textContent=type==='comida'?'🍽':'🌙';grid.appendChild(lbl);
+    dates.forEach(d=>grid.appendChild(buildCell(d,type)));
+  });
+}
+
+function mealKey(date,type){return `${dk(date)}_${type}`;}
+
+function buildCell(date,type){
+  const key=mealKey(date,type);
+  const meal=meals[key];
+  const cell=E('div','cell');
+  if(meal){
+    const del=E('button','del-btn');del.textContent='✕';
+    del.onclick=ev=>{ev.stopPropagation();deleteMeal(key);};cell.appendChild(del);
+    const nm=E('div','cell-name');nm.textContent=meal.name;cell.appendChild(nm);
+    const tags=E('div','cell-tags');
+    if(meal.pro)  tags.appendChild(mkTag(meal.pro,'t-pro'));
+    if(meal.vr)   tags.appendChild(mkTag(meal.vr,'t-vr'));
+    if(meal.vc)   tags.appendChild(mkTag(meal.vc,'t-vc'));
+    if(meal.hid)  tags.appendChild(mkTag(meal.hid,'t-hid'));
+    cell.appendChild(tags);
+    const rec=recipes.find(r=>r.name.toLowerCase()===meal.name.toLowerCase());
+    if(rec&&(rec.steps||[]).length){
+      const pb=E('button','prep-btn');pb.textContent='📖';
+      pb.onclick=ev=>{ev.stopPropagation();openView(rec.id);};cell.appendChild(pb);
+    }
+    cell.onclick=()=>openMeal(key,type,meal);
+  }else{
+    const add=E('button','add-btn');add.innerHTML='+';
+    add.onclick=()=>openMeal(key,type,null);
+    cell.appendChild(add);
+  }
+  return cell;
+}
+
+function mkTag(text,cls){const t=E('span','tag '+cls);t.textContent=text.length>18?text.slice(0,16)+'…':text;return t;}
+function deleteMeal(key){delete meals[key];save('vegan_m',meals);renderWeek();toast('Plato eliminado');}
+
+// ══════════════════════════════════════
+// MEAL MODAL
+// ══════════════════════════════════════
+function openMeal(key,type,existing){
+  editMealKey=key;
+  document.getElementById('meal-title').textContent=existing?'Editar plato':'Añadir plato';
+  document.getElementById('m-type').value=type;
+  const fields=['m-name','m-pro','m-vr','m-vc','m-hid'];
+  if(existing){
+    document.getElementById('m-name').value=existing.name||'';
+    document.getElementById('m-pro').value=existing.pro||'';
+    document.getElementById('m-vr').value=existing.vr||'';
+    document.getElementById('m-vc').value=existing.vc||'';
+    document.getElementById('m-hid').value=existing.hid||'';
+  }else{fields.forEach(id=>document.getElementById(id).value='');}
+  document.getElementById('m-save').checked=false;
+  document.getElementById('ac-list').style.display='none';
+  document.getElementById('meal-overlay').classList.add('on');
+}
+function closeMeal(){document.getElementById('meal-overlay').classList.remove('on');editMealKey=null;}
+
+function saveMeal(){
+  const name=document.getElementById('m-name').value.trim();
+  if(!name){alert('Escribe el nombre del plato');return;}
+  const meal={name,
+    pro:document.getElementById('m-pro').value.trim(),
+    vr:document.getElementById('m-vr').value.trim(),
+    vc:document.getElementById('m-vc').value.trim(),
+    hid:document.getElementById('m-hid').value.trim()
+  };
+  meals[editMealKey]=meal;save('vegan_m',meals);
+  if(document.getElementById('m-save').checked){
+    if(!recipes.find(r=>r.name.toLowerCase()===name.toLowerCase())){
+      recipes.push({id:'r'+Date.now(),name,pro:meal.pro,vr:meal.vr,vc:meal.vc,hid:meal.hid,ing:[],steps:[],notes:''});
+      save('vegan_r',recipes);
+    }
+  }
+  closeMeal();renderWeek();toast('Plato guardado ✓');
+}
+
+// ══════════════════════════════════════
+// AUTOCOMPLETE
+// ══════════════════════════════════════
+function ac(val){
+  const list=document.getElementById('ac-list');
+  if(!val||val.length<2){list.style.display='none';return;}
+  const m=recipes.filter(r=>r.name.toLowerCase().includes(val.toLowerCase())).slice(0,5);
+  if(!m.length){list.style.display='none';return;}
+  list.innerHTML='';
+  m.forEach(r=>{
+    const item=E('div','ac-item');
+    item.innerHTML=`${r.name}<small>${[r.pro,r.vc,r.hid].filter(Boolean).join(' · ')}</small>`;
+    item.onclick=()=>{
+      document.getElementById('m-name').value=r.name;
+      document.getElementById('m-pro').value=r.pro||'';
+      document.getElementById('m-vr').value=r.vr||'';
+      document.getElementById('m-vc').value=r.vc||'';
+      document.getElementById('m-hid').value=r.hid||'';
+      list.style.display='none';
     };
+    list.appendChild(item);
+  });
+  list.style.display='block';
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.autocomplete'))document.getElementById('ac-list').style.display='none';});
 
-    const dias = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-    
-    // CONFIGURACIÓN DE SINCRONIZACIÓN (Aquí conectas tu Google Sheet)
-    const SCRIPT_URL = "TU_URL_DE_GOOGLE_APPS_SCRIPT"; 
+// ══════════════════════════════════════
+// RECIPE VIEW
+// ══════════════════════════════════════
+function openView(id){
+  const r=recipes.find(x=>x.id===id);if(!r)return;
+  const macros=[
+    r.pro?`<span class="tag t-pro">🟠 ${r.pro}</span>`:'',
+    r.vr?`<span class="tag t-vr">🟢 ${r.vr}</span>`:'',
+    r.vc?`<span class="tag t-vc">🔵 ${r.vc}</span>`:'',
+    r.hid?`<span class="tag t-hid">🟣 ${r.hid}</span>`:''
+  ].filter(Boolean).join('');
+  const ings=(r.ing||[]).length?`<div class="r-section"><h5>Ingredientes</h5><ul class="ing-list">${(r.ing||[]).map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
+  const steps=(r.steps||[]).length?`<div class="r-section"><h5>Preparación</h5><ol class="steps-list">${(r.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ol></div>`:'';
+  const notes=r.notes?`<div class="recipe-notes full-col">💡 ${r.notes}</div>`:'';
+  document.getElementById('view-content').innerHTML=`
+    <div class="recipe-title">${r.name}</div>
+    <div class="macro-row">${macros}</div>
+    <div class="r2col">${ings}${steps}${notes}</div>`;
+  document.getElementById('view-edit-btn').onclick=()=>{closeView();openEditRec(r);};
+  document.getElementById('view-overlay').classList.add('on');
+}
+function closeView(){document.getElementById('view-overlay').classList.remove('on');}
 
-    function init() {
-        const h = document.getElementById('header');
-        dias.forEach(d => h.innerHTML += `<th>${d}</th>`);
-        
-        const b = document.getElementById('content');
-        ["Comida", "Cena"].forEach(tipo => {
-            let row = `<tr><td><strong>${tipo}</strong></td>`;
-            dias.forEach(dia => {
-                row += `<td>
-                    <select onchange="fill('${tipo}-${dia}', this.value)">
-                        <option value="">-</option>
-                        ${Object.keys(db).map(r => `<option value="${r}">${r}</option>`).join('')}
-                    </select>
-                    <input id="p-${tipo}-${dia}" placeholder="Pro">
-                    <input id="v-${tipo}-${dia}" placeholder="Ver">
-                    <input id="h-${tipo}-${dia}" placeholder="HC">
-                </td>`;
-            });
-            b.innerHTML += row + `</tr>`;
-        });
-        loadFromCloud();
+// ══════════════════════════════════════
+// SHOPPING
+// ══════════════════════════════════════
+function genShopping(){
+  const dates=weekDates();
+  const all=[];
+  dates.forEach(d=>{
+    ['comida','cena'].forEach(type=>{
+      const meal=meals[mealKey(d,type)];if(!meal)return;
+      const rec=recipes.find(r=>r.name.toLowerCase()===meal.name.toLowerCase());
+      if(rec&&rec.ing&&rec.ing.length)rec.ing.forEach(i=>all.push(i.trim()));
+      else[meal.pro,meal.vr,meal.vc,meal.hid].filter(Boolean).forEach(x=>x.split(',').forEach(t=>{const tt=t.trim();if(tt)all.push(tt);}));
+    });
+  });
+  const seen={};const unique=[];
+  all.forEach(i=>{const k=i.toLowerCase();if(!seen[k]){seen[k]=true;unique.push(i);}});
+  shoppingItems=unique;
+  renderShopping(categorize(unique));
+  const dates2=weekDates();
+  const fmt=d=>d.toLocaleDateString('es',{day:'numeric',month:'short'});
+  document.getElementById('shop-sub').textContent=`${fmt(dates2[0])} – ${fmt(dates2[6])} · ${unique.length} ingredientes`;
+  showPage('shopping');
+}
+
+function categorize(items){
+  const cats={
+    '🫘 Legumbres y proteínas':['tofu','seitán','soja','lenteja','garbanzo','alubia','frijol','judión','guisante','anacardo','nuez'],
+    '🥦 Verduras':['espinaca','brócoli','zanahoria','pimiento','calabacín','cebolla','ajo','tomate','seta','champiñón','shitake','boletus','kale','puerro','calabaza','pepino','lechuga','aguacate','cebollino','espárrago','boniato'],
+    '🌾 Cereales y pan':['pasta','arroz','fideos','pan','harina','tortita','masa','maíz'],
+    '🧀 Lácteos veganos':['leche de soja','yogur de soja','nata de soja','queso'],
+    '🫙 Conservas y salsas':['salsa de tomate','tomate triturado','tomate concentrado','salsa soja','kecap','miso','chipotle','tahini','crema de cacahuete','melaza','mostaza'],
+    '🫒 Aceites y ácidos':['aceite','vinagre','limón'],
+    '🌿 Especias':['comino','pimentón','cúrcuma','pimienta','orégano','tomillo','romero','perejil','eneldo','cayena','chile','canela','clavo','laurel','azúcar','sal','levadura nutri'],
+    '🌊 Algas':['kombu','nori','alga','yuba'],
+    '🧂 Otros':[]
+  };
+  const res={};Object.keys(cats).forEach(c=>res[c]=[]);
+  items.forEach(i=>{
+    const low=i.toLowerCase();let placed=false;
+    for(const[cat,kws]of Object.entries(cats)){if(cat==='🧂 Otros')continue;if(kws.some(k=>low.includes(k))){res[cat].push(i);placed=true;break;}}
+    if(!placed)res['🧂 Otros'].push(i);
+  });
+  return Object.fromEntries(Object.entries(res).filter(([,v])=>v.length));
+}
+
+function renderShopping(cats){
+  const cont=document.getElementById('shop-container');
+  if(!Object.keys(cats).length){cont.innerHTML='<p class="no-items">No hay ingredientes en el menú 🌿</p>';return;}
+  const grid=E('div','shop-grid');
+  Object.entries(cats).forEach(([cat,items])=>{
+    const sec=E('div','shop-sec');
+    const h4=E('h4','');h4.textContent=cat;sec.appendChild(h4);
+    items.forEach(ing=>{
+      const ck=ing.toLowerCase().replace(/[^a-z0-9]/g,'_');
+      const row=E('div','shop-item'+(checked[ck]?' ck':''));
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!checked[ck];
+      cb.onchange=()=>{checked[ck]=cb.checked;save('vegan_ck',checked);row.classList.toggle('ck',cb.checked);};
+      const sp=E('span','');sp.textContent=ing;
+      row.appendChild(cb);row.appendChild(sp);sec.appendChild(row);
+    });
+    grid.appendChild(sec);
+  });
+  cont.innerHTML='';cont.appendChild(grid);
+}
+
+function clearChecked(){
+  checked={};save('vegan_ck',checked);
+  document.querySelectorAll('.shop-item.ck').forEach(r=>{r.classList.remove('ck');r.querySelector('input').checked=false;});
+}
+
+function exportICS(){
+  const unchecked=shoppingItems.filter(i=>!checked[i.toLowerCase().replace(/[^a-z0-9]/g,'_')]);
+  if(!unchecked.length){toast('No hay ingredientes sin marcar');return;}
+  const now=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+  const list='Compra vegana '+(new Date().toLocaleDateString('es',{day:'numeric',month:'short'}));
+  let ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Menu Vegano//ES\r\n';
+  unchecked.forEach((item,i)=>{
+    ics+=`BEGIN:VTODO\r\nUID:shop-${i}-${Date.now()}@vegano\r\nSUMMARY:${item}\r\nCATEGORIES:${list}\r\nSTATUS:NEEDS-ACTION\r\nDTSTAMP:${now}\r\nEND:VTODO\r\n`;
+  });
+  ics+='END:VCALENDAR';
+  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='lista_compra.ics';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('📱 Abre el .ics en tu iPhone → se importa en Recordatorios');
+}
+
+// ══════════════════════════════════════
+// RECIPES PAGE
+// ══════════════════════════════════════
+function renderRecs(filter=''){
+  const grid=document.getElementById('rec-grid');grid.innerHTML='';
+  const list=filter?recipes.filter(r=>r.name.toLowerCase().includes(filter.toLowerCase())):recipes;
+  list.forEach(r=>{
+    const card=E('div','rec-card');
+    const h4=E('h4','');h4.textContent=r.name;card.appendChild(h4);
+    const tags=E('div','tags');
+    if(r.pro)  tags.appendChild(mkTag(r.pro,'t-pro'));
+    if(r.vr)   tags.appendChild(mkTag(r.vr,'t-vr'));
+    if(r.vc)   tags.appendChild(mkTag(r.vc,'t-vc'));
+    if(r.hid)  tags.appendChild(mkTag(r.hid,'t-hid'));
+    card.appendChild(tags);
+    if(r.ing&&r.ing.length){const p=E('div','ings');p.textContent=r.ing.slice(0,4).join(', ')+(r.ing.length>4?'…':'');card.appendChild(p);}
+    const acts=E('div','rec-actions');
+    const vb=E('button','xbtn view');vb.textContent='📖 Ver';vb.onclick=()=>openView(r.id);
+    const eb=E('button','xbtn');eb.textContent='✏️';eb.onclick=()=>openEditRec(r);
+    const db=E('button','xbtn del');db.textContent='🗑';db.onclick=()=>delRec(r.id);
+    acts.appendChild(vb);acts.appendChild(eb);acts.appendChild(db);
+    card.appendChild(acts);grid.appendChild(card);
+  });
+  if(!list.length){const p=E('p','');p.textContent='No se encontraron recetas.';p.style.cssText='color:var(--muted);grid-column:1/-1;font-size:.85rem';grid.appendChild(p);}
+}
+function filterRecs(v){renderRecs(v);}
+
+function openNewRec(){
+  editRecId=null;
+  document.getElementById('rec-title').textContent='Nueva receta';
+  ['r-name','r-pro','r-vr','r-vc','r-hid','r-ing','r-steps','r-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-id').value='';
+  document.getElementById('rec-overlay').classList.add('on');
+}
+function openEditRec(r){
+  editRecId=r.id;
+  document.getElementById('rec-title').textContent='Editar receta';
+  document.getElementById('r-name').value=r.name||'';
+  document.getElementById('r-pro').value=r.pro||'';
+  document.getElementById('r-vr').value=r.vr||'';
+  document.getElementById('r-vc').value=r.vc||'';
+  document.getElementById('r-hid').value=r.hid||'';
+  document.getElementById('r-ing').value=(r.ing||[]).join('\n');
+  document.getElementById('r-steps').value=(r.steps||[]).join('\n');
+  document.getElementById('r-notes').value=r.notes||'';
+  document.getElementById('r-id').value=r.id;
+  document.getElementById('rec-overlay').classList.add('on');
+}
+function closeRec(){document.getElementById('rec-overlay').classList.remove('on');}
+
+function saveRec(){
+  const name=document.getElementById('r-name').value.trim();
+  if(!name){alert('Escribe el nombre');return;}
+  const rec={name,
+    pro:document.getElementById('r-pro').value.trim(),
+    vr:document.getElementById('r-vr').value.trim(),
+    vc:document.getElementById('r-vc').value.trim(),
+    hid:document.getElementById('r-hid').value.trim(),
+    ing:document.getElementById('r-ing').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    steps:document.getElementById('r-steps').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    notes:document.getElementById('r-notes').value.trim()
+  };
+  if(editRecId){const idx=recipes.findIndex(r=>r.id===editRecId);if(idx>-1){rec.id=editRecId;recipes[idx]=rec;}}
+  else{rec.id='r'+Date.now();recipes.push(rec);}
+  save('vegan_r',recipes);closeRec();
+  renderRecs(document.getElementById('rec-search').value);
+  toast('Receta guardada ✓');
+}
+function delRec(id){
+  if(!confirm('¿Eliminar esta receta?'))return;
+  recipes=recipes.filter(r=>r.id!==id);save('vegan_r',recipes);
+  renderRecs(document.getElementById('rec-search').value);toast('Receta eliminada');
+}
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  const idx=['planner','shopping','recipes'].indexOf(name);
+  if(idx>=0)document.querySelectorAll('.tab')[idx].classList.add('on');
+  if(name==='recipes')renderRecs();
+}
+function E(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+
+// Close overlays on background tap
+['meal-overlay','view-overlay','rec-overlay'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target.id===id){
+      if(id==='meal-overlay')closeMeal();
+      else if(id==='view-overlay')closeView();
+      else closeRec();
     }
+  });
+});
 
-    function fill(id, val) {
-        if(db[val]) {
-            document.getElementById(`p-${id}`).value = db[val].p;
-            document.getElementById(`v-${id}`).value = db[val].v;
-            document.getElementById(`h-${id}`).value = db[val].h;
-        }
-    }
-
-    // Estas funciones permiten que el iPhone hable con la nube
-    async function saveToCloud() {
-        // Implementación de envío a Google Sheets (fetch POST)
-        alert("Enviando a Google Sheets... (Configura tu SCRIPT_URL)");
-    }
-
-    async function loadFromCloud() {
-        // Implementación de lectura de Google Sheets (fetch GET)
-    }
-
-    init();
+renderWeek();
 </script>
 </body>
 </html>
