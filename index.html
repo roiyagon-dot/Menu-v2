@@ -6,11 +6,6 @@
 <title>Menú Semanal Vegano</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════
-   CONFIGURATION NOTICE
-   Fill in your Google Sheets credentials
-   at the top of the <script> section
-   ══════════════════════════════════════ */
 :root {
   --bg:#f5f0e8;--surface:#fffdf8;--surface2:#f0ebe0;
   --accent:#4a7c59;--accent2:#c17f3a;--accent3:#8b4a6b;
@@ -28,11 +23,6 @@ header h1 span{color:var(--accent2);font-style:italic}
 .header-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tab-btn{background:transparent;border:1px solid rgba(245,240,232,.3);color:var(--bg);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:.82rem;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
 .tab-btn.active,.tab-btn:hover{background:var(--accent2);border-color:var(--accent2)}
-.sync-status{font-size:.75rem;padding:4px 10px;border-radius:12px;white-space:nowrap;transition:all .3s}
-.sync-ok{background:rgba(74,124,89,.3);color:#a0d4b0}
-.sync-err{background:rgba(180,60,60,.3);color:#f4a0a0}
-.sync-ing{background:rgba(193,127,58,.3);color:#f0c888}
-.sync-local{background:rgba(120,100,80,.3);color:#c8b898}
 
 /* ── Layout ── */
 .container{max-width:1400px;margin:0 auto;padding:20px 16px}
@@ -140,18 +130,6 @@ header h1 span{color:var(--accent2);font-style:italic}
 .recipe-notes{background:var(--surface2);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--text-muted);font-style:italic;margin-top:12px;grid-column:1/-1}
 .macro-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;grid-column:1/-1}
 
-/* ── Config banner ── */
-.config-banner{background:#fff8e0;border:1px solid #f0c060;border-radius:10px;padding:14px 16px;margin-bottom:16px;font-size:.85rem}
-.config-banner strong{display:block;margin-bottom:6px;color:#8a6000}
-.config-banner code{background:#f0e8c0;padding:2px 5px;border-radius:4px;font-size:.82rem}
-
-/* ── Setup modal ── */
-.setup-fields{display:flex;flex-direction:column;gap:10px;margin:12px 0}
-.setup-field label{font-size:.82rem;font-weight:500;color:var(--text-muted);margin-bottom:4px;display:block}
-.setup-field input{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-family:monospace;font-size:.85rem}
-.setup-steps{font-size:.82rem;color:var(--text-muted);line-height:1.8;margin-bottom:12px}
-.setup-steps a{color:var(--accent)}
-
 /* ── Notification ── */
 .notif{position:fixed;bottom:20px;right:20px;background:var(--text);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:.87rem;z-index:300;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:280px}
 .notif.show{transform:translateY(0);opacity:1}
@@ -181,20 +159,12 @@ header h1 span{color:var(--accent2);font-style:italic}
     <button class="tab-btn active" onclick="showTab('planner')">Planificador</button>
     <button class="tab-btn" onclick="showTab('shopping')">🛒 Compra</button>
     <button class="tab-btn" onclick="showTab('recipes')">📖 Recetas</button>
-    <button class="tab-btn" onclick="openSetup()">⚙️ Sync</button>
   </div>
-  <span class="sync-status sync-local" id="sync-status">📱 Local</span>
 </header>
 
 <div class="container">
 
-<!-- ══ PLANNER ══ -->
 <div id="tab-planner" class="tab-content active">
-  <div id="config-banner" class="config-banner" style="display:none">
-    <strong>⚙️ Sincronización no configurada</strong>
-    Los datos se guardan solo en este dispositivo. Haz clic en <strong>⚙️ Sync</strong> para configurar Google Sheets y sincronizar entre móvil y ordenador.
-  </div>
-
   <div class="week-bar">
     <button class="week-btn" onclick="prevWeek()">◀</button>
     <h2 id="week-label">—</h2>
@@ -213,7 +183,6 @@ header h1 span{color:var(--accent2);font-style:italic}
   <div class="week-grid" id="week-grid"></div>
 </div>
 
-<!-- ══ SHOPPING ══ -->
 <div id="tab-shopping" class="tab-content">
   <div class="shopping-header">
     <div>
@@ -222,64 +191,45 @@ header h1 span{color:var(--accent2);font-style:italic}
     </div>
     <div class="shopping-actions">
       <button class="btn-secondary" onclick="generateShopping()">🔄 Actualizar</button>
-      <button class="ios-export-btn" onclick="exportToReminders()" title="Exportar a Recordatorios de iPhone">
-        <span style="font-size:1rem">📱</span> Añadir a Recordatorios
-      </button>
-      <button class="btn-secondary" onclick="clearChecked()">✓ Limpiar</button>
+      <button class="ios-export-btn" onclick="exportToReminders()" title="Exportar a Recordatorios de iPhone">📱 Recordatorios</button>
+      <button class="btn-xs danger" onclick="clearShoppingChecks()" style="padding:7px 12px; border-radius:8px">Desmarcar todo</button>
     </div>
   </div>
-  <div id="shopping-list-container"><p class="no-ingredients">Genera la lista desde el planificador 🌿</p></div>
+  <div class="shopping-grid" id="shopping-grid"></div>
 </div>
 
-<!-- ══ RECIPES ══ -->
 <div id="tab-recipes" class="tab-content">
   <div class="recipes-header">
-    <input type="text" class="search-input" placeholder="Buscar receta…" oninput="filterRecipes(this.value)" id="recipe-search">
-    <button class="btn-primary" onclick="openNewRecipeModal()">+ Nueva receta</button>
+    <input type="text" id="recipe-search" class="search-input" placeholder="Buscar recetas por nombre o ingrediente..." oninput="renderRecipes()">
+    <button class="btn-primary" onclick="openRecipeModal()">➕ Nueva Receta</button>
   </div>
   <div class="recipes-grid" id="recipes-grid"></div>
 </div>
 
-</div><!-- /container -->
-
-<!-- ══ MODAL: Meal ══ -->
-<div class="modal-overlay" id="meal-modal">
+</div> <div class="modal-overlay" id="meal-modal">
   <div class="modal">
-    <h3 id="meal-modal-title">Añadir plato</h3>
+    <h3 id="meal-modal-title">Editar Comida</h3>
+    <input type="hidden" id="meal-day">
+    <input type="hidden" id="meal-slot">
+    
     <div class="form-group">
       <label>Nombre del plato</label>
       <div class="input-wrap">
-        <input type="text" id="meal-name-input" placeholder="Ej: Lentejas" oninput="autocompleteRecipe(this.value)" autocomplete="off">
-        <div class="autocomplete-list" id="autocomplete-list" style="display:none"></div>
+        <input type="text" id="meal-name-input" placeholder="Ej. Lentejas con verduras" autocomplete="off" oninput="handleMealSearch(this.value)">
+        <div class="autocomplete-list" id="meal-auto-list" style="display:none"></div>
       </div>
     </div>
+    
     <div class="form-group">
-      <label>🟠 Proteína</label>
-      <input type="text" id="meal-protein" placeholder="Ej: Lentejas, Tofu">
+      <label>Categorías del plato (Filtros de color)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="chk-protein" style="accent-color:var(--protein)"> Proteína</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="chk-vegraw" style="accent-color:var(--vegraw)"> Verdura Cruda</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="chk-vegcooked" style="accent-color:var(--vegcooked)"> Verdura Cocinada</label>
+        <label style="font-weight:normal;display:flex;align-items:center;gap:6px"><input type="checkbox" id="chk-carbs" style="accent-color:var(--carbs)"> Hidratos</label>
+      </div>
     </div>
-    <div class="form-group">
-      <label>🟢 Verdura cruda</label>
-      <input type="text" id="meal-vegraw" placeholder="Ej: Tomate, Lechuga">
-    </div>
-    <div class="form-group">
-      <label>🔵 Verdura cocinada</label>
-      <input type="text" id="meal-vegcooked" placeholder="Ej: Espinacas, Pimiento">
-    </div>
-    <div class="form-group">
-      <label>🟣 Hidratos</label>
-      <input type="text" id="meal-carbs" placeholder="Ej: Arroz, Pasta, Pan">
-    </div>
-    <div class="form-group">
-      <label>Comida / Cena</label>
-      <select id="meal-type">
-        <option value="comida">🍽 Comida</option>
-        <option value="cena">🌙 Cena</option>
-      </select>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <input type="checkbox" id="save-as-recipe" style="accent-color:var(--accent);width:15px;height:15px">
-      <label for="save-as-recipe" style="font-size:.85rem;cursor:pointer">Guardar como receta para reutilizar</label>
-    </div>
+    
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeMealModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveMeal()">Guardar</button>
@@ -287,665 +237,16 @@ header h1 span{color:var(--accent2);font-style:italic}
   </div>
 </div>
 
-<!-- ══ MODAL: Recipe Edit ══ -->
 <div class="modal-overlay" id="recipe-modal">
   <div class="modal">
-    <h3 id="recipe-modal-title">Nueva receta</h3>
+    <h3 id="recipe-modal-title">Añadir Receta</h3>
+    <input type="hidden" id="recipe-id-input">
+    
     <div class="form-group">
-      <label>Nombre</label>
-      <input type="text" id="recipe-name-input" placeholder="Ej: Ramen tantanmen">
+      <label>Nombre de la receta *</label>
+      <input type="text" id="rec-title" placeholder="Ej. Hamburguesas de garbanzo">
     </div>
+    
     <div class="form-group">
-      <label>🟠 Proteína</label>
-      <input type="text" id="recipe-protein">
-    </div>
-    <div class="form-group">
-      <label>🟢 Verdura cruda</label>
-      <input type="text" id="recipe-vegraw">
-    </div>
-    <div class="form-group">
-      <label>🔵 Verdura cocinada</label>
-      <input type="text" id="recipe-vegcooked">
-    </div>
-    <div class="form-group">
-      <label>🟣 Hidratos</label>
-      <input type="text" id="recipe-carbs">
-    </div>
-    <div class="form-group">
-      <label>Ingredientes (uno por línea)</label>
-      <textarea id="recipe-ingredients" placeholder="Tofu&#10;Alga kombu&#10;Fideos&#10;Miso"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Preparación (un paso por línea)</label>
-      <textarea id="recipe-steps" placeholder="Hidratar las setas 30 min.&#10;Sofreír ajo y cebollino.&#10;Añadir el caldo y hervir 30 min." style="min-height:100px"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Notas</label>
-      <input type="text" id="recipe-notes" placeholder="Ej: Se puede congelar">
-    </div>
-    <input type="hidden" id="recipe-edit-id">
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeRecipeModal()">Cancelar</button>
-      <button class="btn-primary" onclick="saveRecipe()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: Recipe View ══ -->
-<div class="modal-overlay recipe-view-modal" id="recipe-view-modal">
-  <div class="modal">
-    <div id="recipe-view-content"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeViewModal()">Cerrar</button>
-      <button class="btn-primary" id="recipe-view-edit-btn">✏️ Editar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: Setup ══ -->
-<div class="modal-overlay" id="setup-modal">
-  <div class="modal">
-    <h3>⚙️ Configurar sincronización</h3>
-    <div class="setup-steps">
-      <strong>Pasos (5-10 min, solo una vez):</strong><br>
-      1. Ve a <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> → crea un proyecto<br>
-      2. APIs &amp; Services → Enable APIs → busca "Google Sheets API" → activar<br>
-      3. Credentials → Create Credentials → API Key → copia la clave<br>
-      4. Crea un <a href="https://sheets.google.com" target="_blank">Google Sheet nuevo</a> → compartir como "cualquiera con el enlace puede editar"<br>
-      5. Copia el ID del Sheet (la parte larga en la URL entre /d/ y /edit)<br>
-      6. Pega ambos aquí abajo:
-    </div>
-    <div class="setup-fields">
-      <div class="setup-field">
-        <label>API Key de Google</label>
-        <input type="text" id="setup-api-key" placeholder="AIzaSy...">
-      </div>
-      <div class="setup-field">
-        <label>ID del Google Sheet</label>
-        <input type="text" id="setup-sheet-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms">
-      </div>
-    </div>
-    <p style="font-size:.78rem;color:var(--text-muted)">Tus credenciales se guardan solo en este dispositivo (localStorage). Tendrás que configurarlo también en el móvil la primera vez.</p>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeSetup()">Cancelar</button>
-      <button class="btn-secondary" style="color:#c0392b" onclick="clearSync()">Desconectar</button>
-      <button class="btn-primary" onclick="saveSetup()">Guardar y conectar</button>
-    </div>
-  </div>
-</div>
-
-<div class="notif" id="notif"></div>
-
-<script>
-// ══════════════════════════════════════════
-// GOOGLE SHEETS CONFIG
-// (se guarda en localStorage tras configurar)
-// ══════════════════════════════════════════
-let GAPI_KEY    = localStorage.getItem('gs_api_key')    || '';
-let GSHEET_ID   = localStorage.getItem('gs_sheet_id')   || '';
-const SHEET_MEALS   = 'Meals';
-const SHEET_RECIPES = 'Recipes';
-
-// ══════════════════════════════════════════
-// CONSTANTS & STATE
-// ══════════════════════════════════════════
-const DAYS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
-
-const DEFAULT_RECIPES = [
-  {id:'r1',name:'Beef & Brócoli',protein:'Soja texturizada',vegraw:'',vegcooked:'Brócoli',carbs:'',ingredients:['Filete de soja','Brócoli','Jengibre','Ajo','Cebollino chino','Salsa soja oscura','Salsa soja normal','Azúcar moreno','Caldo'],steps:['Hidratar la soja en agua hirviendo según indicaciones del fabricante (mín. 30 min).','Hacer un sofrito con ajo, cebollino y jengibre. Cocer el brócoli en el micro.','Mezclar las salsas de soja, caldo y azúcar. Añadir a la soja escurrida y juntar con el sofrito en la sartén.'],notes:'Con pimiento verde queda espectacular. Usar aceite de girasol para que no reste sabor.'},
-  {id:'r2',name:'Börek',protein:'Tofu',vegraw:'',vegcooked:'Espinacas, Tomates secos',carbs:'Masa filo',ingredients:['Cebolla','Ajo','Espinacas frescas','Tofu desmigajable','Tomates secos en aceite','Avellanas','Queso feta vegano (opcional)','Masa filo','Pimienta','Tomillo','Romero','Perejil'],steps:['Pochar la cebolla y el ajo.','Añadir el tofu en trozos irregulares, rompiéndolo con las manos.','Cuando suelte agua añadir los tomates picados y las avellanas picadas. Tostar un poco.','Añadir las especias y un chorro de vino blanco. Reducir.','Cuando deje de oler a alcohol añadir las espinacas y un chorrito de caldo. Cocinar 5 min.','Poner 3-4 hojas de filo pintadas con aceite. Colocar el relleno en una tira y enrollar formando una espiral.','Hornear a 180°C 25-35 min con semillas de sésamo por encima.'],notes:''},
-  {id:'r3',name:'Boloñesa de tofu ahumado',protein:'Tofu ahumado',vegraw:'',vegcooked:'Tomate',carbs:'Pasta (tiburones o rigatoni)',ingredients:['Tofu ahumado','Salsa de tomate','Pasta tiburones o rigatoni'],steps:['Desmenuzar el tofu y tostarlo en una sartén mientras se cuece la pasta.','Cuando el tofu esté bien tostado añadir el tomate. Opcionalmente sofreír ajo y cebolla antes.','Cocer la pasta al dente (tiempo recomendado menos 2 min). Añadirla a la salsa con 200ml del agua de cocción. Integrar 1-2 min.'],notes:'Las cosas importantes: pasta al dente y agua de cocción. Ambas son importantes.'},
-  {id:'r4',name:'Boloñesa de legumbres',protein:'Legumbres varias',vegraw:'',vegcooked:'Tomate, pimiento, zanahoria',carbs:'Pasta',ingredients:['Legumbres secas (garbanzo, lenteja, alubia roja)','Cebolla','Ajo','Perejil','Sal','Pimienta','Leche de soja o agua','Tomate','Zanahoria','Pimiento'],steps:['Remojar las legumbres 12h.','Picar bien la mezcla de legumbres y dejarla reposar 10 min.','Sofreír las verduras de la salsa. Añadir la mezcla de legumbres a fuego medio. Añadir tomate e ir añadiendo nata de soja o agua haciendo ciclos secado-hidratado unas 3 veces.','Cocer la pasta y usar su agua también para cocinar. Ajustar la salsa al gusto.'],notes:'Cocinar las legumbres más tiempo para que la digestión no sea pesada. Se pueden añadir espinacas o acelgas para más nutrición.'},
-  {id:'r5',name:'Boniato relleno',protein:'Alubias moradas',vegraw:'',vegcooked:'Pimiento rojo, Cebolla',carbs:'Boniato',ingredients:['Boniato','Cebolla','Pimiento rojo','Alubias moradas cocidas','Tofu marinado (opcional)','Aceite de oliva','Pimentón dulce','Ajo en polvo'],steps:['Pinchar y hornear el boniato hasta que esté tierno (10 min en microondas).','Saltear cebolla, ajo y pimiento con sal y especias (10 min).','Añadir las alubias cocidas y un chorrito de limón, integrar 5 min.','Hacer puré del interior del boniato y rellenar con la mezcla.'],notes:'Servir fresco con salsa de yogur o gratinado con parmesano vegano.'},
-  {id:'r6',name:'Bourguignon de seitán',protein:'Seitán',vegraw:'',vegcooked:'Zanahoria, Champiñones, Cebolla',carbs:'Puré de patatas',ingredients:['Seitán','Harina','Cebolla','Ajo','Zanahorias','Champiñones','Vino tinto','Caldo vegetal','Tomillo','Laurel','Patatas','Leche de soja caliente','Margarina o AOVE'],steps:['Rebozar el seitán en harina y sofreír en AOVE. Reservar.','Pochar cebolla y ajo bien picados.','Agregar zanahorias y champiñones.','Desglasas con la mitad del vino.','Añadir el seitán, las hierbas y el resto del vino. Cuando reduzca, añadir el caldo.','Rectificar de sal y pimienta. Cocinar hasta que la salsa ligue bien.','Puré: cocer patatas en dados grandes y hacer puré con leche y margarina.'],notes:''},
-  {id:'r7',name:'Brócoli con chimichurri y hummus de alubias',protein:'Alubias',vegraw:'',vegcooked:'Brócoli',carbs:'',ingredients:['Brócoli','Alubias cocidas (½ bote)','Ajo','Tahini','Limón','Levadura nutricional','AOVE','Sal','Pimienta negra','Perejil fresco','Orégano','Cayena','Vinagre de manzana'],steps:['Triturar ½ bote de alubias con ajo, tahini, limón, levadura nutricional, aceite, sal y pimienta.','Cortar el brócoli a láminas y hacerlo a la plancha (o micro antes para ablandarlo).','Preparar el chimichurri mezclando perejil, ajo rallado, orégano, cayena, limón, AOVE y vinagre.','Emplatar con el hummus como base, el brócoli encima y el chimichurri por encima.'],notes:'El chimichurri no se conserva bien. El hummus dura varios días en nevera.'},
-  {id:'r8',name:'Callos veganos',protein:'Garbanzos',vegraw:'',vegcooked:'Setas variadas',carbs:'',ingredients:['Garbanzos (remojo noche anterior)','Shitake deshidratado','Boletus deshidratados','Oreja de judas deshidratada','Yuba piel de tofu','Pan reseso','Ajo','Cebolla','Zanahoria','Pimentón dulce y picante','Ajo en polvo','Cebolla en polvo','Clavo','Comino'],steps:['Poner a remojo la noche anterior: los garbanzos por un lado; las setas y la yuba con ajo en polvo, cebolla en polvo, pimentón y mucho comino.','Sofreír ajo, cebolla y zanahoria rallada con pimentón y comino. Triturar y añadir a la olla.','Calentar los garbanzos con el agua de las setas e ir picando estas.','Añadirlo todo junto con el pan desmigajado. Corregir sabor.','Cocinar hasta que los garbanzos estén bien cocidos.'],notes:'Receta propia. La yuba y las setas dan una textura muy similar a los callos originales.'},
-  {id:'r9',name:'Dürum de tofu',protein:'Tofu',vegraw:'Lechuga, Tomate, Cebolla',vegcooked:'',carbs:'Tortita XXL',ingredients:['Lechuga','Tomate','Cebolla','Tortitas XXL','Tofu','Sal','Pimienta','Pimentón ahumado','Salsa soja','Ajo en polvo','Yogur de soja','Orégano','Limón','Pimiento'],steps:['Cortar el tofu en láminas lo más finas posible.','Planchar con AOVE; cuando empiece a dorar añadir las especias y la salsa soja. Cocinar hasta dorar bien.','Mezclar los ingredientes de la salsa de yogur.','Montar: tortita, tofu, verduras y salsa.'],notes:'La salsa de yogur dura días en nevera.'},
-  {id:'r10',name:'Esparragado de garbanzos',protein:'Garbanzos',vegraw:'',vegcooked:'Espinacas',carbs:'Pan',ingredients:['Espinacas frescas','Garbanzos cocidos','Cebolla','Ajo','Pan reseso (1-3 rebanadas)','Avellanas','Vinagre','Comino','Orégano','Pimentón dulce','Sal','AOVE'],steps:['Picar la cebolla y reservar.','Freír los ajos enteros en aceite. Cuando estén dorados llevar al vaso de la batidora.','Freír el pan y llevarlo junto a los ajos a la batidora.','En el mismo aceite pochar la cebolla. Bajar el fuego, añadir el pimentón, rápidamente las espinacas. Salpimentar y tapar.','Añadir los garbanzos y el orégano. Cocinar 2 min a fuego medio.','Triturar ajos, pan y avellanas con un chorrito de vinagre (añadir agua si no tritura bien).','Añadir el majado y cocinar todo unos 10 min para armonizar sabores.'],notes:'Añadir agua si se seca demasiado. El majado se puede guardar en nevera por meses.'},
-  {id:'r11',name:'Fabes con verduras',protein:'Alubias',vegraw:'',vegcooked:'Calabacín, Zanahoria, Puerro',carbs:'',ingredients:['Alubias (remojo 12h)','Pimentón','Calabacín','Zanahoria','Puerro','Ajo'],steps:['Hidratar las alubias mínimo 12h.','Triturar las verduras y rehogar con sal hasta que se pochen (8-10 min). Reservar parte para espesar el guiso.','Añadir una cucharada de pimentón, las alubias escurridas y agua. Dejar cocer a fuego lento. ¡Chup, chup!'],notes:''},
-  {id:'r12',name:'Falafel',protein:'Garbanzos',vegraw:'',vegcooked:'',carbs:'Pan pita',ingredients:['Ajo','Cebolla fresca','Perejil fresco (15g)','Comino','Cúrcuma','Pimienta','Sal','Levadura química','Harina de garbanzo','Garbanzos crudos remojados (250g)'],steps:['Picar todo y mezclarlo bien. Es mejor si quedan trocitos de garbanzo.','Dejar reposar 30-60 min.','Dar forma de bola o disco con las manos húmedas.','Se puede precongelar en taper y después pasar a bolsa.','Freír en aceite o freidora de aire.'],notes:'Buscar una textura que agregue bien. Congela de maravilla.'},
-  {id:'r13',name:'Frijoles',protein:'Frijoles',vegraw:'',vegcooked:'Zanahoria, Calabacín, Cebolla',carbs:'Arroz',ingredients:['Cebolla','Ajo','Zanahoria','Calabacín','Ron','Frijoles cocidos','Limón','Laurel','Mix especias indias','Comino','Tomate concentrado'],steps:['Rustrir cebolla y ajo en una olla ancha.','Añadir zanahoria y calabacín rallados.','Añadir sal, laurel y especias. Luego un chorreito de ron para que suelte el sabor.','Cuando reduzca añadir los frijoles, una cucharada de tomate concentrado y el zumo de limón.','Integrar y corregir de sabor.'],notes:'Por supuesto, siempre con arroz. También con tostones o fajitas.'},
-  {id:'r14',name:'Guacatofu',protein:'Tofu firme',vegraw:'Aguacate',vegcooked:'',carbs:'',ingredients:['1 aguacate','Tofu firme (125g)','Zumo de medio limón','Levadura nutricional (2 cdas)','Ajo en polvo','Sal','Pimienta','Aceite de oliva (2-3 cdas)','Hierba limón'],steps:['Triturar todo en el vaso de la batidora.','Pasar a un tupper o, si queremos ser fancy, a una manga pastelera.','Espolvorear hierba limón y opcionalmente albahaca u orégano.'],notes:'Dura una semana en nevera. Ideal para desayuno o como hummus.'},
-  {id:'r15',name:'Judiones en salsa de calabaza',protein:'Judiones',vegraw:'',vegcooked:'Calabaza, Espinacas, Cebolla',carbs:'Pan',ingredients:['1 bote de judiones','4 rodajas de calabaza','Anacardos remojados (50g)','Levadura nutricional (1 cda)','Espinacas frescas (100g)','Cebolla','Ajo','Vino blanco','Sal y pimienta','Avellanas tostadas'],steps:['Asar la calabaza con aceite, sal y pimienta hasta que esté blandita.','Picar y sofreír la cebolla y el ajo. Desglasas con vino blanco.','Agregar los judiones con el aquafaba y remover.','Incorporar las espinacas y cocinar 5 min más.','Triturar la calabaza con los anacardos y la levadura nutricional. Añadir a la cacerola (opcional: ralladura de naranja).','Rectificar de sal y pimienta.','Servir con avellanas tostadas y pan.'],notes:''},
-  {id:'r16',name:'Lentejas',protein:'Lentejas',vegraw:'',vegcooked:'Zanahoria, Calabacín, Pimiento, Cebolla',carbs:'',ingredients:['Lentejas (400g)','Agua (1.6L)','Cebolla','Zanahoria','Pimiento verde','Pimiento rojo','Ajo','Tomate concentrado (1 cda)','Laurel','Pimienta negra','Sal','Calabacín','Pimentón dulce','Pimentón picante','Comino','Aceite de oliva'],steps:['Poner todos los ingredientes de las lentejas en una cazuela con el agua. Llevar a ebullición y bajar a fuego suave.','Picar el calabacín y la zanahoria extra en daditos. Saltear la zanahoria 5 min y añadir el calabacín y las especias.','Cuando las lentejas estén hechas, sacar las verduras enteras a la batidora y triturar.','Mezclar todo y servir.'],notes:'Receta de El Comidista (4 personas).'},
-  {id:'r17',name:'Marry me pasta',protein:'Tofu crujiente',vegraw:'',vegcooked:'Tomates secos',carbs:'Pasta mafalda',ingredients:['Pasta mafalda','Ajo (2-3 dientes)','Tomate seco en aceite (120g)','Nata de soja (200g)','Caldo de verduras (125g)','Levadura nutricional (2 cdas)','Sal','Pimienta','Pimentón dulce','Orégano','Tofu (½ bloque rallado)','Aceite','Especias','Salsa soja'],steps:['Poner a cocer la pasta.','Sofreír el ajo y agregar los tomates bien picados, 2 min.','Añadir especias, nata, caldo, levadura nutricional y sal.','Saltear el tofu con aceite, especias y sal hasta que esté dorado y crujiente.','Añadir la pasta a la salsa con un poco del agua de cocción.','Añadir el tofu y servir con albahaca (y nueces si se quiere).'],notes:'No es buena para recalentar. Recién hecha es TOP. Mancha una olla y dos sartenes.'},
-  {id:'r18',name:'Muhammara',protein:'Nueces',vegraw:'',vegcooked:'Pimientos rojos asados',carbs:'Pan',ingredients:['2 pimientos rojos','1 diente de ajo','Pan rallado o migas (2 cdas)','Nueces (½ taza)','Melaza de granada (1 cda)','Tahini (1 cda, opcional)','Comino','Chile en polvo'],steps:['Precalentar el horno a 200°C.','Cortar los pimientos en tiras, retirar semillas. Asar con aceite con la piel hacia arriba hasta que se tueste (20-30 min).','Dejar reposar en un bowl tapados con film para que suden.','Pelar los pimientos una vez fríos.','Triturar con el resto de ingredientes.'],notes:''},
-  {id:'r19',name:'Mujaddara',protein:'Lentejas',vegraw:'',vegcooked:'Cebolla caramelizada',carbs:'Arroz basmati',ingredients:['Lentejas (100g)','Arroz basmati (100g)','2 cebollas grandes','Agua (225ml)','Comino en polvo (½ cdta)','Canela en polvo (½ cdta)','Sal y pimienta negra','AOVE','Yogur vegano (opcional)','Perejil o menta'],steps:['Cortar media cebolla en juliana y reservar. El resto en cubitos para caramelizar.','Una vez caramelizada la cebolla añadir el arroz, el agua y las especias. Cocinar ~20 min.','Freír la cebolla en juliana hasta que esté bien dorada y crujiente.','Mezclar el arroz con las lentejas (si son de bote, añadir directamente).','Servir con la cebolla frita por encima y el yogur opcional.'],notes:'Mejor comerlo al momento. Guardar la cebolla frita separada para que no pierda el crujiente.'},
-  {id:'r20',name:'Nasi Goreng',protein:'Tofu',vegraw:'Cebollino chino',vegcooked:'Espárragos',carbs:'Arroz largo del día anterior',ingredients:['Cebollino chino','Ajo','Jengibre','Jalapeño','Espárragos','Chile en polvo','Kecap Manis','Arroz largo (del día anterior)','Tofu','Ron (opcional)'],steps:['Hacer el refrito asiático: jengibre, ajo y cebollino. Añadir el jalapeño.','Añadir los espárragos troceados (opcional: flambear con ron).','Añadir el arroz, el tofu desmigajado y la salsa Kecap Manis. Saltear hasta que quede bronceado.','Emplatar y finalizar con la parte verde del cebollino y chile en polvo.'],notes:'Simplemente delicioso.'},
-  {id:'r21',name:'Nozarella',protein:'',vegraw:'',vegcooked:'',carbs:'',ingredients:['Leche de soja (200ml)','Levadura nutricional (3 cdas)','Vinagre o zumo de limón (1 cda)','Fécula de maíz (5 cdas)','Yogur de soja (125g)'],steps:['Mezclar en una olla la leche, el aceite y el vinagre. Calentar removiendo.','Añadir la levadura nutricional y la sal removiendo.','Añadir la fécula poco a poco a fuego bajo, remover con energía.','Añadir el yogur y batir hasta homogeneizar.','Poner en moldes o en papel film formando bolas.','Refrigerar al menos 2 horas.'],notes:'Dura una semana en nevera. No funde del todo pero queda cremosa. Salen 3 bolitas medianas.'},
-  {id:'r22',name:'Parvegano',protein:'',vegraw:'',vegcooked:'',carbs:'',ingredients:['Leche de soja (250g)','Levadura nutricional (40g)','Vinagre de arroz (20g)','Fécula de maíz (160g)','Miso blanco (60g)','Aceite de coco desodorizado (90g)','Mostaza Dijon (10g)','Sal'],steps:['Batir todos los ingredientes bien.','Pasar a un recipiente resistente y cocinar al vapor 45 min (el nivel debe ser menor del grosor final deseado).','Refrigerar mínimo 8h, idealmente 24h.'],notes:''},
-  {id:'r23',name:"Pau's pipsas (pizza)",protein:'',vegraw:'Tomate',vegcooked:'',carbs:'Masa pizza',ingredients:["Harina de fuerza (280g)",'Sal (6g)','Agua (180g)','Levadura seca (5g)','AOVE (16g)'],steps:['Mezclar y amasar todos los ingredientes.','Fermentación 24h en nevera.','Hornear con piedra.'],notes:'El método original era con el doble de levadura y fermentación a temperatura ambiente, pero la versión con nevera queda mejor. Rinde 2 medianas o 1 familiar.'},
-  {id:'r24',name:'Pesto de kale',protein:'Anacardos',vegraw:'',vegcooked:'Kale',carbs:'Pasta',ingredients:['Pasta','Kale','Levadura nutricional (4 cdas)','Ajo (1 diente)','Aceite de oliva (50g)','Anacardos (40g)','Sal','Pimienta negra','Ralladura de limón'],steps:['Separar las hojas de kale del tallo. Triturar con el ajo, anacardos, levadura, ralladura de limón, sal y pimienta, añadiendo el aceite lentamente.','Pasar a una sartén honda.','Cuando la pasta esté al dente, añadirla con un poco del agua de cocción.','Cocinar hasta que esté cremoso.'],notes:'Para pesto clásico, sustituir el kale por albahaca.'},
-  {id:'r25',name:'Pulled setas para burritos',protein:'Seta cardo',vegraw:'',vegcooked:'Cebolla, Tomate',carbs:'Tortilla',ingredients:['Seta cardo','Chipotle adobado','Cebolla','Tomate triturado','Caldo vegetal','Comino','Chile en polvo','Orégano'],steps:['Sofreír la cebolla a fuego medio-alto hasta caramelizar. Mientras, poner las setas en el micro 5-10 min y deshilachar con tenedor.','Añadir a la cebolla 2 chipotles y 2 cdas de su salsa.','Especiar con orégano, comino y chile. Integrar 1 min.','Añadir el tomate triturado y reducir 5 min.','Añadir caldo vegetal, integrar y opcionalmente triturar la salsa.','Devolver la salsa a la sartén con las setas. Reducir 10-15 min.'],notes:'Corre un alto riesgo de ser demasiado divertida.'},
-  {id:'r26',name:'Ramen tantanmen',protein:'Tofu',vegraw:'Cebolleta, Maíz',vegcooked:'Brócoli, Setas',carbs:'Fideos ramen',ingredients:['Crema de cacahuete (100g)','Tahini (100g)','Miso (150g)','Salsa soja o tamari (50g)','Azúcar moreno (15g)','Agua (1L)','Alga kombu (10g)','Shitake secas (20g)','Brócoli','Tofu','Maíz dulce','Alga nori','Cebolleta','Fideos ramen'],steps:['Dashi: hidratar las setas y añadir ese agua al caldo. Calentar hasta hervir. Añadir setas y algas. Tapar y cocer a fuego lento 30 min. Colar.','Mezclar crema de cacahuete, tahini, miso, salsa soja y azúcar para el tare.','Brócoli: al vapor y luego salteado con aceite y sal.','Tofu: salteado hasta dorar.','Setas del caldo: saltear con un toque de salsa soja.','Montaje: diluir el tare en un poco de caldo. Añadir fideos y el dashi bien caliente. Toppings por encima.'],notes:'El tare se puede guardar en nevera varias semanas o congelar meses.'},
-  {id:'r27',name:'Salmón de tofu',protein:'Tofu',vegraw:'',vegcooked:'',carbs:'Puré de patata',ingredients:['Tofu','Alga nori','Salsa soja','Vinagre de arroz','Azúcar moreno','Miso','Almidón de maíz','Ajo','Jengibre','Pimentón','Cúrcuma','Polvo de remolacha (color)','Humo líquido (opcional)','Caldo (½L aprox)'],steps:['Prensar el tofu mínimo 20 min. Mientras preparar el marinado triturando todos los ingredientes.','Cortar el tofu en forma de filetes de salmón. Hacer cortes o "mellas" para imitar las vetas.','Dejar marinar mínimo 1h, idealmente una noche.','Cortar tiras de nori del tamaño de los filetes, mojar en el marinado y unir al tofu.','Rebozar en almidón de maíz.','Cocinar a la plancha por todos los lados hasta que quede crujiente.'],notes:'Al congelar el sabor se hace más intenso, ideal troceado en ensalada a modo de atún. El marinado sobrante se puede congelar.'},
-  {id:'r28',name:'Sobrasada de boniato',protein:'Anacardos',vegraw:'',vegcooked:'Boniato asado, Tomates secos',carbs:'',ingredients:['Boniato asado (350g / 1 unidad)','Tomates secos (95g)','Anacardos (40g)','Pimentón dulce (3 cdtas)','Aceite del tomate (60ml)','Ajo en polvo (1 cdta)','Comino (½ cdta)','Perejil fresco (1 puñado)','Zumo de limón (2 cdas)','Sal (1 cdta)'],steps:['Asar el boniato entero a 200°C unos 35-40 min (o 10 min en micro, pinchado muy bien).','Sacar la pulpa y triturar todo con el resto de ingredientes.','Epic.'],notes:'Aunque no le pongas anacardos ni perejil fresco sigue quedando brutal.'},
-  {id:'r29',name:'Tzatziki para gyros',protein:'',vegraw:'Pepino',vegcooked:'',carbs:'Pan pita',ingredients:['Pepino','Yogur de soja','Eneldo','Zumo de ½ limón','Aceite (2 cdas)','Ajo rallado (1 diente)'],steps:['Rallar el pepino con piel y escurrirlo bien.','Mezclar con el resto de ingredientes y listo.'],notes:'Aguanta 3-5 días en nevera. Se puede añadir menta. Para gyros: pan pita, cebolla morada, tomate, pepino y proteína vegana.'},
-  {id:'r30',name:'Webo (huevo vegano)',protein:'Tofu sedoso',vegraw:'',vegcooked:'',carbs:'',ingredients:['Tofu sedoso (400g / 1 bloque)','Harina de garbanzo (2 cdas)','Cúrcuma (1 cdta)','Sal negra (1 cdta)','Levadura nutricional (2 cdas)'],steps:['Triturar todos los ingredientes en el vaso de la batidora.','Usar como huevo revuelto en sartén, o como base para tortillas y quiches.'],notes:'Aunque parezca poco líquido, así funciona. Dura una semana en nevera.'},
-];
-
-let recipes = loadLS('vegan_recipes') || deepCopy(DEFAULT_RECIPES);
-let meals   = loadLS('vegan_meals')   || {};
-let shoppingChecked = loadLS('vegan_shopping_checked') || {};
-let currentWeekStart = getMonday(new Date());
-let currentShoppingItems = [];
-let editingMealKey = null;
-let editingRecipeId = null;
-let viewingRecipeId = null;
-
-// ══════════════════════════════════════════
-// STORAGE HELPERS
-// ══════════════════════════════════════════
-function loadLS(k){ try{ const d=localStorage.getItem(k); return d?JSON.parse(d):null; }catch(e){ return null; }}
-function saveLS(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){}}
-function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
-
-// ══════════════════════════════════════════
-// GOOGLE SHEETS SYNC
-// ══════════════════════════════════════════
-function isConfigured(){ return GAPI_KEY && GSHEET_ID; }
-
-async function gsRead(sheetName){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${GSHEET_ID}/values/${sheetName}!A1:ZZ?key=${GAPI_KEY}`;
-  const r=await fetch(url);
-  if(!r.ok) throw new Error('GS read error '+r.status);
-  const d=await r.json();
-  return d.values||[];
-}
-
-async function gsWrite(sheetName, values){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${GSHEET_ID}/values/${sheetName}!A1:ZZ?valueInputOption=RAW&key=${GAPI_KEY}`;
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({range:`${sheetName}!A1:ZZ`,majorDimension:'ROWS',values})});
-  if(!r.ok) throw new Error('GS write error '+r.status);
-}
-
-async function gsClear(sheetName){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${GSHEET_ID}/values/${sheetName}:clear?key=${GAPI_KEY}`;
-  await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'}});
-}
-
-async function syncLoad(){
-  if(!isConfigured()) return;
-  setSyncStatus('ing','⏳ Cargando…');
-  try{
-    // Meals
-    const mRows=await gsRead(SHEET_MEALS);
-    if(mRows.length>1){
-      const obj={};
-      for(let i=1;i<mRows.length;i++){
-        const [key,name,protein,vegraw,vegcooked,carbs]=mRows[i];
-        if(key) obj[key]={name:name||'',protein:protein||'',vegraw:vegraw||'',vegcooked:vegcooked||'',carbs:carbs||''};
-      }
-      meals=obj; saveLS('vegan_meals',meals);
-    }
-    // Recipes
-    const rRows=await gsRead(SHEET_RECIPES);
-    if(rRows.length>1){
-      const arr=[];
-      for(let i=1;i<rRows.length;i++){
-        const [id,name,protein,vegraw,vegcooked,carbs,ings,steps,notes]=rRows[i];
-        if(id&&name) arr.push({id,name,protein:protein||'',vegraw:vegraw||'',vegcooked:vegcooked||'',carbs:carbs||'',ingredients:(ings||'').split('|').filter(Boolean),steps:(steps||'').split('|').filter(Boolean),notes:notes||''});
-      }
-      if(arr.length){recipes=arr;saveLS('vegan_recipes',recipes);}
-    }
-    setSyncStatus('ok','☁️ Sincronizado');
-    renderWeek();
-  }catch(e){
-    setSyncStatus('err','❌ Error sync');
-    console.error(e);
-  }
-}
-
-async function syncSaveMeals(){
-  if(!isConfigured()) return;
-  setSyncStatus('ing','⏳ Guardando…');
-  try{
-    await gsClear(SHEET_MEALS);
-    const rows=[['key','name','protein','vegraw','vegcooked','carbs']];
-    Object.entries(meals).forEach(([k,m])=>rows.push([k,m.name,m.protein,m.vegraw,m.vegcooked,m.carbs]));
-    await gsWrite(SHEET_MEALS,rows);
-    setSyncStatus('ok','☁️ Sincronizado');
-  }catch(e){setSyncStatus('err','❌ Error sync');console.error(e);}
-}
-
-async function syncSaveRecipes(){
-  if(!isConfigured()) return;
-  setSyncStatus('ing','⏳ Guardando…');
-  try{
-    await gsClear(SHEET_RECIPES);
-    const rows=[['id','name','protein','vegraw','vegcooked','carbs','ingredients','steps','notes']];
-    recipes.forEach(r=>rows.push([r.id,r.name,r.protein||'',r.vegraw||'',r.vegcooked||'',r.carbs||'',(r.ingredients||[]).join('|'),(r.steps||[]).join('|'),r.notes||'']));
-    await gsWrite(SHEET_RECIPES,rows);
-    setSyncStatus('ok','☁️ Sincronizado');
-  }catch(e){setSyncStatus('err','❌ Error sync');console.error(e);}
-}
-
-function setSyncStatus(type,text){
-  const el=document.getElementById('sync-status');
-  el.textContent=text;
-  el.className='sync-status sync-'+type;
-}
-
-// ══════════════════════════════════════════
-// SETUP MODAL
-// ══════════════════════════════════════════
-function openSetup(){
-  document.getElementById('setup-api-key').value=GAPI_KEY;
-  document.getElementById('setup-sheet-id').value=GSHEET_ID;
-  document.getElementById('setup-modal').classList.add('open');
-}
-function closeSetup(){ document.getElementById('setup-modal').classList.remove('open'); }
-function saveSetup(){
-  GAPI_KEY=document.getElementById('setup-api-key').value.trim();
-  GSHEET_ID=document.getElementById('setup-sheet-id').value.trim();
-  localStorage.setItem('gs_api_key',GAPI_KEY);
-  localStorage.setItem('gs_sheet_id',GSHEET_ID);
-  closeSetup();
-  document.getElementById('config-banner').style.display='none';
-  syncLoad();
-}
-function clearSync(){
-  GAPI_KEY=''; GSHEET_ID='';
-  localStorage.removeItem('gs_api_key');
-  localStorage.removeItem('gs_sheet_id');
-  closeSetup();
-  setSyncStatus('local','📱 Local');
-  document.getElementById('config-banner').style.display='block';
-}
-
-// ══════════════════════════════════════════
-// WEEK NAVIGATION
-// ══════════════════════════════════════════
-function getMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=dt.getDate()-day+(day===0?-6:1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt;}
-function dateKey(d){return d.toISOString().split('T')[0];}
-function prevWeek(){currentWeekStart.setDate(currentWeekStart.getDate()-7);renderWeek();}
-function nextWeek(){currentWeekStart.setDate(currentWeekStart.getDate()+7);renderWeek();}
-function jumpToWeek(){const v=document.getElementById('week-start').value;if(v){currentWeekStart=getMonday(new Date(v+'T12:00:00'));renderWeek();}}
-function weekDates(){return Array.from({length:7},(_,i)=>{const d=new Date(currentWeekStart);d.setDate(d.getDate()+i);return d;});}
-
-// ══════════════════════════════════════════
-// RENDER WEEK
-// ══════════════════════════════════════════
-function renderWeek(){
-  const dates=weekDates();
-  const s=dates[0].toLocaleDateString('es',{day:'numeric',month:'long'});
-  const e=dates[6].toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('week-label').textContent=`${s} – ${e}`;
-  document.getElementById('week-start').value=dateKey(dates[0]);
-  const grid=document.getElementById('week-grid');
-  grid.innerHTML='';
-  grid.appendChild(el('div',''));
-  DAYS.forEach((d,i)=>{
-    const hd=el('div','grid-header');
-    hd.innerHTML=`<div>${d.slice(0,3)}</div><div style="font-size:.65rem;opacity:.7">${dates[i].getDate()}</div>`;
-    grid.appendChild(hd);
-  });
-  ['comida','cena'].forEach(type=>{
-    const sp=el('div','section-spacer');sp.style.gridColumn='1/-1';grid.appendChild(sp);
-    const lbl=el('div','section-label');lbl.textContent=type==='comida'?'🍽':'🌙';grid.appendChild(lbl);
-    dates.forEach(d=>grid.appendChild(mealCell(d,type)));
-  });
-}
-
-function mealKey(date,type){return `${dateKey(date)}_${type}`;}
-
-function mealCell(date,type){
-  const key=mealKey(date,type);
-  const meal=meals[key];
-  const cell=el('div','meal-cell');
-  if(meal){
-    const del=el('button','delete-meal');del.textContent='✕';del.onclick=e=>{e.stopPropagation();deleteMeal(key);};cell.appendChild(del);
-    const nm=el('div','meal-name');nm.textContent=meal.name;cell.appendChild(nm);
-    const tags=el('div','meal-tags');
-    if(meal.protein)  tags.appendChild(makeTag(meal.protein,'protein'));
-    if(meal.vegraw)   tags.appendChild(makeTag(meal.vegraw,'vegraw'));
-    if(meal.vegcooked)tags.appendChild(makeTag(meal.vegcooked,'vegcooked'));
-    if(meal.carbs)    tags.appendChild(makeTag(meal.carbs,'carbs'));
-    cell.appendChild(tags);
-    const rec=recipes.find(r=>r.name.toLowerCase()===meal.name.toLowerCase());
-    if(rec&&(rec.steps||[]).length){
-      const vb=el('button','view-recipe-btn');vb.textContent='📖 ver preparación';vb.onclick=e=>{e.stopPropagation();openViewModal(rec.id);};cell.appendChild(vb);
-    }
-    cell.onclick=()=>openMealModal(key,date,type,meal);
-  }else{
-    const add=el('button','add-meal-btn');add.innerHTML='+';add.onclick=()=>openMealModal(key,date,type,null);cell.appendChild(add);
-  }
-  return cell;
-}
-
-function makeTag(text,cls){const t=el('span','tag '+cls);t.textContent=text.length>20?text.slice(0,18)+'…':text;return t;}
-
-function deleteMeal(key){delete meals[key];saveLS('vegan_meals',meals);syncSaveMeals();renderWeek();notify('Plato eliminado');}
-
-// ══════════════════════════════════════════
-// MEAL MODAL
-// ══════════════════════════════════════════
-function openMealModal(key,date,type,existing){
-  editingMealKey=key;
-  document.getElementById('meal-modal-title').textContent=existing?'Editar plato':'Añadir plato';
-  document.getElementById('meal-type').value=type;
-  const fields=['meal-name-input','meal-protein','meal-vegraw','meal-vegcooked','meal-carbs'];
-  if(existing){
-    document.getElementById('meal-name-input').value=existing.name||'';
-    document.getElementById('meal-protein').value=existing.protein||'';
-    document.getElementById('meal-vegraw').value=existing.vegraw||'';
-    document.getElementById('meal-vegcooked').value=existing.vegcooked||'';
-    document.getElementById('meal-carbs').value=existing.carbs||'';
-  }else{ fields.forEach(id=>document.getElementById(id).value=''); }
-  document.getElementById('save-as-recipe').checked=false;
-  document.getElementById('autocomplete-list').style.display='none';
-  document.getElementById('meal-modal').classList.add('open');
-}
-function closeMealModal(){document.getElementById('meal-modal').classList.remove('open');editingMealKey=null;}
-
-function saveMeal(){
-  const name=document.getElementById('meal-name-input').value.trim();
-  if(!name){alert('Escribe el nombre del plato');return;}
-  const meal={name,protein:document.getElementById('meal-protein').value.trim(),vegraw:document.getElementById('meal-vegraw').value.trim(),vegcooked:document.getElementById('meal-vegcooked').value.trim(),carbs:document.getElementById('meal-carbs').value.trim()};
-  meals[editingMealKey]=meal;
-  saveLS('vegan_meals',meals);
-  if(document.getElementById('save-as-recipe').checked){
-    const exists=recipes.find(r=>r.name.toLowerCase()===name.toLowerCase());
-    if(!exists){const rec={id:'r'+Date.now(),name,...meal,ingredients:[],steps:[],notes:''};recipes.push(rec);saveLS('vegan_recipes',recipes);syncSaveRecipes();}
-  }
-  closeMealModal();
-  syncSaveMeals();
-  renderWeek();
-  notify('Plato guardado ✓');
-}
-
-// ══════════════════════════════════════════
-// AUTOCOMPLETE
-// ══════════════════════════════════════════
-function autocompleteRecipe(val){
-  const list=document.getElementById('autocomplete-list');
-  if(!val||val.length<2){list.style.display='none';return;}
-  const matches=recipes.filter(r=>r.name.toLowerCase().includes(val.toLowerCase())).slice(0,6);
-  if(!matches.length){list.style.display='none';return;}
-  list.innerHTML='';
-  matches.forEach(r=>{
-    const item=el('div','autocomplete-item');
-    item.innerHTML=`${r.name}<small>${[r.protein,r.vegcooked,r.carbs].filter(Boolean).join(' · ')}</small>`;
-    item.onclick=()=>{
-      document.getElementById('meal-name-input').value=r.name;
-      document.getElementById('meal-protein').value=r.protein||'';
-      document.getElementById('meal-vegraw').value=r.vegraw||'';
-      document.getElementById('meal-vegcooked').value=r.vegcooked||'';
-      document.getElementById('meal-carbs').value=r.carbs||'';
-      list.style.display='none';
-    };
-    list.appendChild(item);
-  });
-  list.style.display='block';
-}
-document.addEventListener('click',e=>{if(!e.target.closest('.input-wrap'))document.getElementById('autocomplete-list').style.display='none';});
-
-// ══════════════════════════════════════════
-// RECIPE VIEW MODAL
-// ══════════════════════════════════════════
-function openViewModal(id){
-  const r=recipes.find(x=>x.id===id);
-  if(!r) return;
-  viewingRecipeId=id;
-  const cont=document.getElementById('recipe-view-content');
-  const macros=[
-    r.protein?`<span class="tag protein">🟠 ${r.protein}</span>`:'',
-    r.vegraw?`<span class="tag vegraw">🟢 ${r.vegraw}</span>`:'',
-    r.vegcooked?`<span class="tag vegcooked">🔵 ${r.vegcooked}</span>`:'',
-    r.carbs?`<span class="tag carbs">🟣 ${r.carbs}</span>`:''
-  ].filter(Boolean).join('');
-
-  const ings=(r.ingredients||[]).length?`<div class="recipe-section"><h5>Ingredientes</h5><ul class="ingredient-list">${(r.ingredients||[]).map(i=>`<li>${i}</li>`).join('')}</ul></div>`:'';
-  const steps=(r.steps||[]).length?`<div class="recipe-section"><h5>Preparación</h5><ol class="steps-list">${(r.steps||[]).map(s=>`<li>${s}</li>`).join('')}</ol></div>`:'';
-  const notes=r.notes?`<div class="recipe-notes">💡 ${r.notes}</div>`:'';
-
-  cont.innerHTML=`
-    <div class="recipe-view-title">${r.name}</div>
-    <div class="recipe-view-body">
-      <div class="macro-pills">${macros}</div>
-      ${ings}${steps}${notes}
-    </div>`;
-  document.getElementById('recipe-view-edit-btn').onclick=()=>{closeViewModal();openEditRecipeModal(r);};
-  document.getElementById('recipe-view-modal').classList.add('open');
-}
-function closeViewModal(){document.getElementById('recipe-view-modal').classList.remove('open');}
-
-// ══════════════════════════════════════════
-// SHOPPING LIST
-// ══════════════════════════════════════════
-function generateShopping(){
-  const dates=weekDates();
-  const allIngredients=[];
-  dates.forEach(d=>{
-    ['comida','cena'].forEach(type=>{
-      const meal=meals[mealKey(d,type)];
-      if(!meal) return;
-      const recipe=recipes.find(r=>r.name.toLowerCase()===meal.name.toLowerCase());
-      if(recipe&&recipe.ingredients&&recipe.ingredients.length){
-        recipe.ingredients.forEach(ing=>allIngredients.push(ing.trim()));
-      }else{
-        [meal.protein,meal.vegraw,meal.vegcooked,meal.carbs].filter(Boolean).forEach(m=>m.split(',').forEach(x=>{const t=x.trim();if(t)allIngredients.push(t);}));
-      }
-    });
-  });
-  const seen={};const unique=[];
-  allIngredients.forEach(ing=>{const k=ing.toLowerCase();if(!seen[k]){seen[k]=true;unique.push(ing);}});
-  currentShoppingItems=unique;
-  const cats=categorize(unique);
-  renderShoppingList(cats);
-  const label=document.getElementById('shopping-subtitle');
-  const s=dates[0].toLocaleDateString('es',{day:'numeric',month:'long'});
-  const e=dates[6].toLocaleDateString('es',{day:'numeric',month:'long',year:'numeric'});
-  label.textContent=`Del ${s} al ${e} · ${unique.length} ingredientes`;
-  showTab('shopping');
-}
-
-function categorize(ingredients){
-  const cats={'🫘 Legumbres y proteínas':['tofu','seitán','soja','tempeh','lenteja','garbanzo','alubia','frijol','judión','fabe','guisante','heura','anacardo','nuez'],'🥦 Verduras y setas':['espinaca','brócoli','zanahoria','pimiento','calabacín','cebolla','ajo','tomate','berenjena','seta','champiñón','shitake','boletus','kale','puerro','coliflor','apio','boniato','calabaza','pepino','lechuga','aguacate','cebollino','espárrago','rúcula'],'🌾 Cereales y pan':['pasta','arroz','fideos','pan','harina','maíz','tortita','masa','cuscús','quinoa','polenta'],'🧀 Lácteos veganos':['leche de soja','yogur de soja','nata de soja','queso','nozarella','parvegano'],'🫙 Conservas y salsas':['salsa de tomate','tomate triturado','tomate concentrado','salsa soja','kecap','miso','chipotle','tahini','crema de cacahuete','melaza','mostaza'],'🫒 Aceites y ácidos':['aceite','vinagre','limón','lima'],'🌿 Especias y hierbas':['comino','pimentón','cúrcuma','pimienta','orégano','tomillo','romero','perejil','eneldo','cayena','chile','canela','clavo','laurel','hierba','perejil','albahaca','menta','azúcar moreno','sal'],'🌊 Algas y fermentados':['kombu','nori','wakame','alga','yuba','levadura nutri'],'🥜 Frutos secos':['avellana','almendra','pipa','sésamo','lino'],'🧂 Otros':[]};
-  const result={};Object.keys(cats).forEach(c=>result[c]=[]);
-  ingredients.forEach(ing=>{
-    const low=ing.toLowerCase();let placed=false;
-    for(const[cat,kws]of Object.entries(cats)){if(cat==='🧂 Otros')continue;if(kws.some(k=>low.includes(k))){result[cat].push(ing);placed=true;break;}}
-    if(!placed)result['🧂 Otros'].push(ing);
-  });
-  return Object.fromEntries(Object.entries(result).filter(([,v])=>v.length));
-}
-
-function renderShoppingList(cats){
-  const cont=document.getElementById('shopping-list-container');
-  if(!Object.keys(cats).length){cont.innerHTML='<p class="no-ingredients">No hay ingredientes en el menú de esta semana 🌿</p>';return;}
-  cont.innerHTML='';
-  const grid=el('div','shopping-grid');
-  Object.entries(cats).forEach(([cat,items])=>{
-    const sec=el('div','shopping-section');
-    const h4=el('h4','');h4.textContent=cat;sec.appendChild(h4);
-    items.forEach(ing=>{
-      const ck=ing.toLowerCase().replace(/\s/g,'_').replace(/[^a-z0-9_]/g,'');
-      const row=el('div','shopping-item'+(shoppingChecked[ck]?' checked':''));
-      const cb=document.createElement('input');cb.type='checkbox';cb.checked=!!shoppingChecked[ck];
-      cb.onchange=()=>{shoppingChecked[ck]=cb.checked;saveLS('vegan_shopping_checked',shoppingChecked);row.classList.toggle('checked',cb.checked);};
-      const sp=el('span','');sp.textContent=ing;
-      row.appendChild(cb);row.appendChild(sp);sec.appendChild(row);
-    });
-    grid.appendChild(sec);
-  });
-  cont.appendChild(grid);
-}
-
-function clearChecked(){shoppingChecked={};saveLS('vegan_shopping_checked',shoppingChecked);document.querySelectorAll('.shopping-item.checked').forEach(r=>{r.classList.remove('checked');r.querySelector('input').checked=false;});}
-
-// ══════════════════════════════════════════
-// EXPORT TO iOS REMINDERS
-// Uses the x-apple-reminderkit URI scheme with
-// a generated .ics file as fallback
-// ══════════════════════════════════════════
-function exportToReminders(){
-  const unchecked=currentShoppingItems.filter(ing=>{
-    const k=ing.toLowerCase().replace(/\s/g,'_').replace(/[^a-z0-9_]/g,'');
-    return !shoppingChecked[k];
-  });
-  if(!unchecked.length){notify('No hay ingredientes sin marcar');return;}
-
-  // Try deep link first (works on Safari/iOS)
-  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-  if(isIOS||isSafari){
-    // Encode each item as a separate reminder via shortcuts
-    // The most reliable method: generate an ICS with VTODO entries
-    exportAsICS(unchecked);
-  }else{
-    // On desktop: offer instructions + copy to clipboard
-    exportAsICS(unchecked);
-  }
-}
-
-function exportAsICS(items){
-  const now=new Date().toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
-  const listName='Compra vegana '+(new Date().toLocaleDateString('es',{day:'numeric',month:'short'}));
-
-  let ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Menu Semanal//ES\r\nCALSCALE:GREGORIAN\r\n';
-  items.forEach((item,i)=>{
-    ics+=`BEGIN:VTODO\r\nUID:shopping-${i}-${Date.now()}@menuvegano\r\nSUMMARY:${item.replace(/,/g,' ')}\r\nCATEGORIES:${listName}\r\nSTATUS:NEEDS-ACTION\r\nDTSTAMP:${now}\r\nEND:VTODO\r\n`;
-  });
-  ics+='END:VCALENDAR';
-
-  const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download='lista_compra_vegana.ics';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  notify('📱 Abre el archivo .ics en tu iPhone para importar a Recordatorios');
-}
-
-// ══════════════════════════════════════════
-// RECIPES
-// ══════════════════════════════════════════
-function renderRecipes(filter=''){
-  const grid=document.getElementById('recipes-grid');
-  grid.innerHTML='';
-  const filtered=filter?recipes.filter(r=>r.name.toLowerCase().includes(filter.toLowerCase())):recipes;
-  filtered.forEach(r=>{
-    const card=el('div','recipe-card');
-    const h4=el('h4','');h4.textContent=r.name;card.appendChild(h4);
-    const tags=el('div','tags');
-    if(r.protein)   tags.appendChild(makeTag(r.protein,'protein'));
-    if(r.vegraw)    tags.appendChild(makeTag(r.vegraw,'vegraw'));
-    if(r.vegcooked) tags.appendChild(makeTag(r.vegcooked,'vegcooked'));
-    if(r.carbs)     tags.appendChild(makeTag(r.carbs,'carbs'));
-    card.appendChild(tags);
-    if(r.ingredients&&r.ingredients.length){
-      const prev=el('div','ingredients-preview');
-      prev.textContent=r.ingredients.slice(0,4).join(', ')+(r.ingredients.length>4?'…':'');
-      card.appendChild(prev);
-    }
-    const actions=el('div','recipe-card-actions');
-    const vb=el('button','btn-xs view');vb.textContent='📖 Ver receta';vb.onclick=()=>openViewModal(r.id);
-    const eb=el('button','btn-xs');eb.textContent='✏️ Editar';eb.onclick=()=>openEditRecipeModal(r);
-    const db=el('button','btn-xs danger');db.textContent='🗑';db.onclick=()=>deleteRecipe(r.id);
-    actions.appendChild(vb);actions.appendChild(eb);actions.appendChild(db);
-    card.appendChild(actions);
-    grid.appendChild(card);
-  });
-  if(!filtered.length){const p=el('p','');p.textContent='No se encontraron recetas.';p.style.cssText='color:var(--text-muted);font-size:.9rem;grid-column:1/-1';grid.appendChild(p);}
-}
-function filterRecipes(v){renderRecipes(v);}
-
-function openNewRecipeModal(){
-  editingRecipeId=null;
-  document.getElementById('recipe-modal-title').textContent='Nueva receta';
-  ['recipe-name-input','recipe-protein','recipe-vegraw','recipe-vegcooked','recipe-carbs','recipe-ingredients','recipe-steps','recipe-notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('recipe-edit-id').value='';
-  document.getElementById('recipe-modal').classList.add('open');
-}
-function openEditRecipeModal(r){
-  editingRecipeId=r.id;
-  document.getElementById('recipe-modal-title').textContent='Editar receta';
-  document.getElementById('recipe-name-input').value=r.name||'';
-  document.getElementById('recipe-protein').value=r.protein||'';
-  document.getElementById('recipe-vegraw').value=r.vegraw||'';
-  document.getElementById('recipe-vegcooked').value=r.vegcooked||'';
-  document.getElementById('recipe-carbs').value=r.carbs||'';
-  document.getElementById('recipe-ingredients').value=(r.ingredients||[]).join('\n');
-  document.getElementById('recipe-steps').value=(r.steps||[]).join('\n');
-  document.getElementById('recipe-notes').value=r.notes||'';
-  document.getElementById('recipe-edit-id').value=r.id;
-  document.getElementById('recipe-modal').classList.add('open');
-}
-function closeRecipeModal(){document.getElementById('recipe-modal').classList.remove('open');}
-
-function saveRecipe(){
-  const name=document.getElementById('recipe-name-input').value.trim();
-  if(!name){alert('Escribe el nombre');return;}
-  const rec={
-    name,
-    protein:document.getElementById('recipe-protein').value.trim(),
-    vegraw:document.getElementById('recipe-vegraw').value.trim(),
-    vegcooked:document.getElementById('recipe-vegcooked').value.trim(),
-    carbs:document.getElementById('recipe-carbs').value.trim(),
-    ingredients:document.getElementById('recipe-ingredients').value.split('\n').map(s=>s.trim()).filter(Boolean),
-    steps:document.getElementById('recipe-steps').value.split('\n').map(s=>s.trim()).filter(Boolean),
-    notes:document.getElementById('recipe-notes').value.trim(),
-  };
-  if(editingRecipeId){const idx=recipes.findIndex(r=>r.id===editingRecipeId);if(idx>-1){rec.id=editingRecipeId;recipes[idx]=rec;}}
-  else{rec.id='r'+Date.now();recipes.push(rec);}
-  saveLS('vegan_recipes',recipes);
-  syncSaveRecipes();
-  closeRecipeModal();
-  renderRecipes(document.getElementById('recipe-search').value);
-  notify('Receta guardada ✓');
-}
-
-function deleteRecipe(id){
-  if(!confirm('¿Eliminar esta receta?'))return;
-  recipes=recipes.filter(r=>r.id!==id);
-  saveLS('vegan_recipes',recipes);
-  syncSaveRecipes();
-  renderRecipes(document.getElementById('recipe-search').value);
-  notify('Receta eliminada');
-}
-
-// ══════════════════════════════════════════
-// UI UTILS
-// ══════════════════════════════════════════
-function showTab(name){
-  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  const idx=['planner','shopping','recipes'].indexOf(name);
-  if(idx>=0)document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-  if(name==='recipes')renderRecipes();
-}
-function el(tag,cls){const e=document.createElement(tag);if(cls)e.className=cls;return e;}
-function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('show');setTimeout(()=>n.classList.remove('show'),2800);}
-
-// Close modals on overlay click
-['meal-modal','recipe-modal','recipe-view-modal','setup-modal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{
-    if(e.target.id===id){
-      if(id==='meal-modal')closeMealModal();
-      else if(id==='recipe-modal')closeRecipeModal();
-      else if(id==='recipe-view-modal')closeViewModal();
-      else if(id==='setup-modal')closeSetup();
-    }
-  });
-});
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-if(!isConfigured()){
-  document.getElementById('config-banner').style.display='block';
-  setSyncStatus('local','📱 Local');
-}else{
-  syncLoad();
-}
-renderWeek();
-</script>
-</body>
-</html>
+      <label>Ingredientes (Uno por línea con su sección opcional, ej: [Verdulería] 2 Tomates) *</label>
+      <textarea id="rec-ingredients" placeholder="
