@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Sincronizado Vegano</title>
+    <style>
+        /* Estilo optimizado para iPhone 14 y Escritorio */
+        :root { --p: #4a7c59; --bg: #f8f5f0; }
+        body { font-family: sans-serif; background: var(--bg); padding: 10px; }
+        .container { max-width: 900px; margin: auto; background: white; border-radius: 15px; padding: 15px; shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .scroll-area { overflow-x: auto; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { background: var(--p); color: white; padding: 10px; font-size: 12px; }
+        td { border: 1px solid #eee; padding: 5px; }
+        input, select { width: 100%; border: 1px solid #ddd; padding: 8px; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        button { flex: 1; padding: 12px; border-radius: 8px; border: none; background: var(--p); color: white; font-weight: bold; cursor: pointer; }
+        .btn-sync { background: #3a6e8b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🌿 Menú Sincronizado</h2>
+    
+    <div class="btn-group">
+        <button onclick="saveToCloud()" class="btn-sync">☁️ Guardar y Sincronizar</button>
+        <button onclick="generateList()">🛒 Lista Compra</button>
+    </div>
+
+    <div class="scroll-area">
+        <table>
+            <thead>
+                <tr id="header"><th>Tipo</th></tr>
+            </thead>
+            <tbody id="content"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // DATOS DE TU LIBRO DE RECETAS (PDF)
+    const db = {
+        "Beef & Brocauli": {p:"Soia", v:"Brócoli", h:"Arroz", ing:["Soia","Brócoli","Salsa Soia"]},
+        "Börek": {p:"Tofu/Feta", v:"Espinacas", h:"Masa filo", ing:["Masa filo","Espinacas","Tofu"]},
+        "Boloñesa": {p:"Tofu ahumado", v:"Tomate", h:"Pasta", ing:["Tofu","Tomate","Pasta"]},
+        "Callos": {p:"Garbanzos/Yuba", v:"Setas", h:"Pan", ing:["Garbanzos","Yuba","Setas"]},
+        "Dürum": {p:"Tofu kebab", v:"Lechuga/Tomate", h:"Tortita", ing:["Tofu","Tortitas","Verdura"]}
+    };
+
+    const dias = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+    
+    // CONFIGURACIÓN DE SINCRONIZACIÓN (Aquí conectas tu Google Sheet)
+    const SCRIPT_URL = "TU_URL_DE_GOOGLE_APPS_SCRIPT"; 
+
+    function init() {
+        const h = document.getElementById('header');
+        dias.forEach(d => h.innerHTML += `<th>${d}</th>`);
+        
+        const b = document.getElementById('content');
+        ["Comida", "Cena"].forEach(tipo => {
+            let row = `<tr><td><strong>${tipo}</strong></td>`;
+            dias.forEach(dia => {
+                row += `<td>
+                    <select onchange="fill('${tipo}-${dia}', this.value)">
+                        <option value="">-</option>
+                        ${Object.keys(db).map(r => `<option value="${r}">${r}</option>`).join('')}
+                    </select>
+                    <input id="p-${tipo}-${dia}" placeholder="Pro">
+                    <input id="v-${tipo}-${dia}" placeholder="Ver">
+                    <input id="h-${tipo}-${dia}" placeholder="HC">
+                </td>`;
+            });
+            b.innerHTML += row + `</tr>`;
+        });
+        loadFromCloud();
+    }
+
+    function fill(id, val) {
+        if(db[val]) {
+            document.getElementById(`p-${id}`).value = db[val].p;
+            document.getElementById(`v-${id}`).value = db[val].v;
+            document.getElementById(`h-${id}`).value = db[val].h;
+        }
+    }
+
+    // Estas funciones permiten que el iPhone hable con la nube
+    async function saveToCloud() {
+        // Implementación de envío a Google Sheets (fetch POST)
+        alert("Enviando a Google Sheets... (Configura tu SCRIPT_URL)");
+    }
+
+    async function loadFromCloud() {
+        // Implementación de lectura de Google Sheets (fetch GET)
+    }
+
+    init();
+</script>
+</body>
+</html>
